@@ -87,7 +87,7 @@ const HomePage = () => {
       </div>
       {imageSrc && (
         <div>
-          <ReactCrop
+          <ReactCrop // for the preview window
             crop={crop}
             onChange={c => setCrop(c)}
             onComplete={onCropComplete}
