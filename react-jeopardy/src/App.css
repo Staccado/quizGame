@@ -1,0 +1,196 @@
+body {
+  background-color: #121258;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.home-nav a {
+  color: white;
+  margin: 0 20px;
+  font-size: 24px;
+}
+
+.admin-controls {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #06063a;
+  border-radius: 8px;
+}
+
+.player-control-group {
+  margin: 10px;
+}
+
+.player-control-group span {
+  margin-right: 15px;
+}
+
+.admin-clickable {
+  cursor: pointer;
+}
+
+.admin-clickable:hover {
+  outline: 3px solid yellow;
+}
+
+.answered {
+  /* Style for answered questions, e.g., make them empty or a different color */
+ /* background-color: #2c2c8d;
+  color: #555 !important;
+  pointer-events: none; /* A question that is answered cannot be clicked again */
+  color: transparent !important;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.crop-container {
+  position: relative;
+  width: 500px;
+  height: 375px; /* 4:3 aspect ratio */
+  max-width: 100%;
+  margin: 20px auto;
+  background-color: #000;
+  max-width: 600px; /* Add a max-width to the crop container */
+}
+
+.podium-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+/* Admin Buzzer Button Styles */
+.admin-buzzer-container {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #06063a;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-buzzer-button, .fadeQuestionButton {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.admin-buzzer-button.enabled, .fadeQuestionButton {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.admin-buzzer-button.enabled:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.admin-buzzer-button.disabled {
+  background-color: #f44336;
+  color: white;
+  cursor: not-allowed;
+}
+
+.buzzer-status {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #ff9800;
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Right or Wrong Button Styles */
+.right-or-wrong-container {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #06063a;
+  border-radius: 8px;
+  border: 2px solid #ff9800;
+}
+
+.right-or-wrong-container h3 {
+  margin: 0 0 15px 0;
+  color: #ff9800;
+  font-size: 18px;
+}
+
+.question-info {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #1a1a4a;
+  border-radius: 5px;
+  text-align: left;
+}
+
+.question-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.answer-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.correct-button, .incorrect-button {
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.correct-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.correct-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.incorrect-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.incorrect-button:hover {
+  background-color: #d32f2f;
+  transform: scale(1.05);
+}
+
+.clear-button {
+  background-color: #ff9800;
+  color: white;
+}
+
+.clear-button:hover {
+  background-color: #f57c00;
+  transform: scale(1.05);
+}
+
+.board-area-container {
+  position: relative;
+}
