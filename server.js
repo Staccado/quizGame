@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); //test
 const http = require('http');
 const socketio = require('socket.io');
 const fs = require('fs');
@@ -18,7 +18,7 @@ testBoardLayout = [
       "categoryName": "Test",
       "questions": [
         { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris", "dailyDouble": true },
-        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin" },
+        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDobule":true },
         { "value": 600, "answered": false, "question": "What is the capital of Italy?", "answer": "Rome" },
         { "value": 800, "answered": false, "question": "What is the capital of Spain?", "answer": "Madrid" },
         { "value": 1000, "answered": false, "question": "What is the capital of Portugal?", "answer": "Lisbon" },
