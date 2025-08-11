@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import './questionScreen.css';
 import { SocketContext } from './SocketContext';
 import { JeopardyPodium } from './podium';
+import { DailyDoubleIntro } from './DailyDoubleIntro';
+import { QuestionDisplay } from './QuestionDisplay';
 
 function QuestionScreen({ gameState }) {
     const socket = useContext(SocketContext);
@@ -43,19 +45,11 @@ function QuestionScreen({ gameState }) {
     return (
         <div className={`question-screen ${dailyDouble ? 'daily-double' : 'regular-question'} ${questionActive ? 'active' : ''}`}>
             {dailyDouble && !isQuestionVisible && (
-                <div className="daily-double-screen">
-                    <h1>Daily Double!</h1>
-                    {wagerAmount > 0 && <h2>Wager: ${wagerAmount}</h2>}
-                </div>
+                <DailyDoubleIntro wagerAmount={wagerAmount} />
             )}
 
             {isQuestionVisible && (
-                <div className="question-content">
-                    {questionImage && <img src={questionImage} alt="Question" className="question-image" />}
-                    <div className="question-text">
-                        {questionText}
-                    </div>
-                </div>
+                <QuestionDisplay questionText={questionText} questionImage={questionImage} />
             )}
 
             {dailyDouble && dailyDoublePlayer && (

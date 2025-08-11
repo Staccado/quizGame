@@ -5,6 +5,7 @@ import Board from './Board';
 import Buzzer from './buzzer';
 import Podium from './podium';
 import QuestionScreen from './questionScreen';
+import FinalJeopardy from './finalJeopardy.js'
 
 import './App.css'; // We can reuse the main App styles
 
