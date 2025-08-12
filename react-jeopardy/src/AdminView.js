@@ -5,6 +5,7 @@ import Board from './Board';
 import AdminControls from './AdminControls'; // We will create this component next
 import AdminBuzzerStart from './adminBuzzerStart';
 import RightOrWrong from './rightOrWrong';
+import { FinalJeopardy } from './finalJeopardy';
 import './App.css';
 
 const SERVER_URL = 'http://localhost:3001';
@@ -72,22 +73,39 @@ const AdminView = () => {
     }
   };
 
+  const handleStartFinalJeopardy = () => {
+    // In a real app, you'd have a form to get this data
+    const finalJeopardyData = {
+      category: 'FINAL JEOPARDY',
+      question: 'This is the Final Jeopardy question.',
+      answer: 'This is the answer.'
+    };
+    socket.emit('start-final-jeopardy', finalJeopardyData);
+  };
+
   return (
     <div className="App">
       <h1>Jeopardy! Admin Control Panel</h1>
       {gameState && socket ? (
         <>
-          <Board 
-            boardData={gameState.board} 
-            isAdmin={true} 
-            onQuestionSelected={setCurrentQuestion}
-          />
-          <AdminBuzzerStart gameState={gameState} />
-          <RightOrWrong 
-            currentQuestion={currentQuestion} 
-            highlightedPlayer={getPlayerForRightOrWrong()} 
-          />
-          <AdminControls gameState={gameState} />
+          {gameState.finalJeopardyActive ? (
+            <FinalJeopardy gameState={gameState} isAdmin={true} />
+          ) : (
+            <>
+              <Board 
+                boardData={gameState.board} 
+                isAdmin={true} 
+                onQuestionSelected={setCurrentQuestion}
+              />
+              <AdminBuzzerStart gameState={gameState} />
+              <RightOrWrong 
+                currentQuestion={currentQuestion} 
+                highlightedPlayer={getPlayerForRightOrWrong()} 
+              />
+              <AdminControls gameState={gameState} />
+              <button onClick={handleStartFinalJeopardy}>Start Final Jeopardy</button>
+            </>
+          )}
         </>
       ) : (
         <h1>Connecting to server...</h1>

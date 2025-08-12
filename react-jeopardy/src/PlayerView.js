@@ -5,13 +5,14 @@ import Board from './Board';
 import Buzzer from './buzzer';
 import Podium from './podium';
 import QuestionScreen from './questionScreen';
-import FinalJeopardy from './finalJeopardy.js'
+import { FinalJeopardy } from './finalJeopardy';
 
 import './App.css'; // We can reuse the main App styles
 
 const PlayerView = () => {
   const socket = useContext(SocketContext);
   const [gameState, setGameState] = useState(null);
+  const [player, setPlayer] = useState(null);
 
 
   useEffect(() => {
@@ -36,7 +37,11 @@ const PlayerView = () => {
     }
 
     socket.on('connect', handleConnect);
-    socket.on('gameTick', setGameState);
+    socket.on('gameTick', (newGameState) => {
+        setGameState(newGameState);
+        const currentPlayer = newGameState.players.find(p => p.id === socket.id);
+        setPlayer(currentPlayer);
+    });
     //socket.on('question', setQuestion);
     socket.on('disconnect', () => console.log('Player disconnected.'));
 
@@ -51,13 +56,19 @@ const PlayerView = () => {
     <div className="App">
       {gameState ? (
         <>
-          <div className="board-area-container">
-            <Board boardData={gameState.board} isAdmin={false} />
-            <QuestionScreen gameState={gameState} />
-          </div>
-          <Podium />
-          {/* Buzzer component for players */}
-          <Buzzer gameState={gameState} />
+            {gameState.finalJeopardyActive ? (
+                <FinalJeopardy gameState={gameState} player={player} isAdmin={false} />
+            ) : (
+                <>
+                    <div className="board-area-container">
+                        <Board boardData={gameState.board} isAdmin={false} />
+                        <QuestionScreen gameState={gameState} />
+                    </div>
+                    <Podium />
+                    {/* Buzzer component for players */}
+                    <Buzzer gameState={gameState} />
+                </>
+            )}
         </>
       ) : (
         <h1>Waiting for game to start...</h1>

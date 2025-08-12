@@ -112,6 +112,13 @@ class gameState {
         this.currentActivePlayer = null;
         this.dailyDoublePlayer = null;
         this.wagerAmount = 0;
+        this.finalJeopardyActive = false;
+        this.finalJeopardyCategory = null;
+        this.finalJeopardyQuestion = null;
+        this.finalJeopardyAnswer = null;
+        this.finalJeopardyWagers = {};
+        this.finalJeopardyAnswers = {};
+        this.finalJeopardyRevealed = false;
 
     }
 
@@ -210,7 +217,6 @@ function startWebcamStream(player){
 
     // start and rebroadcast webcam stream
 }
-
 
 
 io.on('connection', (socket) => {
@@ -535,8 +541,66 @@ io.on('connection', (socket) => {
         socket.emit('questionFade');
     });
 
-    
+    socket.on('start-final-jeopardy', (data) => {
+        currentGameState.finalJeopardyActive = true;
+        currentGameState.finalJeopardyCategory = data.category;
+        currentGameState.finalJeopardyQuestion = data.question;
+        currentGameState.finalJeopardyAnswer = data.answer;
+        io.emit('final-jeopardy-started', { category: data.category });
+        console.log('Final Jeopardy started. Category:', data.category);
+    });
 
+    socket.on('submit-final-jeopardy-wager', (data) => {
+        const player = currentGameState.getPlayerById(socket.id);
+        if (player) {
+            currentGameState.finalJeopardyWagers[player.id] = data.wager;
+            console.log(`Player ${player.name} wagered ${data.wager} for Final Jeopardy.`);
+        }
+    });
+
+    socket.on('reveal-final-jeopardy-question', () => {
+        currentGameState.finalJeopardyRevealed = true;
+        io.emit('final-jeopardy-question-revealed', { question: currentGameState.finalJeopardyQuestion });
+        console.log('Final Jeopardy question revealed.');
+    });
+
+    socket.on('submit-final-jeopardy-answer', (data) => {
+        const player = currentGameState.getPlayerById(socket.id);
+        if (player) {
+            currentGameState.finalJeopardyAnswers[player.id] = data.answer;
+            console.log(`Player ${player.name} answered: ${data.answer}`);
+            // Notify admin of the new answer
+            io.emit('admin-final-jeopardy-answer-submitted', {
+                playerId: player.id,
+                name: player.name,
+                answer: data.answer
+            });
+        }
+    });
+
+    socket.on('final-jeopardy-ruling', (data) => {
+        const player = currentGameState.getPlayerById(data.playerId);
+        if (player) {
+            const wager = parseInt(currentGameState.finalJeopardyWagers[data.playerId]) || 0;
+            if (data.correct) {
+                player.modifyScore(wager);
+            } else {
+                player.modifyScore(-wager);
+            }
+            console.log(`Player ${player.name} Final Jeopardy ruling: ${data.correct}. New score: ${player.score}`);
+        }
+    });
+
+    socket.on('end-final-jeopardy', () => {
+        currentGameState.finalJeopardyActive = false;
+        currentGameState.finalJeopardyRevealed = false;
+        currentGameState.finalJeopardyCategory = null;
+        currentGameState.finalJeopardyQuestion = null;
+        currentGameState.finalJeopardyAnswer = null;
+        currentGameState.finalJeopardyWagers = {};
+        currentGameState.finalJeopardyAnswers = {};
+        console.log('Final Jeopardy has ended.');
+    });
 
     // server functions
 
@@ -567,6 +631,12 @@ setInterval(() => {
         currentActivePlayer: currentGameState.currentActivePlayer,
         dailyDoublePlayer: currentGameState.dailyDoublePlayer,
         wagerAmount: currentGameState.wagerAmount,
+        finalJeopardyActive: currentGameState.finalJeopardyActive,
+        finalJeopardyCategory: currentGameState.finalJeopardyCategory,
+        finalJeopardyQuestion: currentGameState.finalJeopardyQuestion,
+        finalJeopardyWagers: currentGameState.finalJeopardyWagers,
+        finalJeopardyAnswers: currentGameState.finalJeopardyAnswers,
+        finalJeopardyRevealed: currentGameState.finalJeopardyRevealed,
         // Note: buzzerTimeoutId is intentionally excluded as it's a Node.js timeout object
     };
    // console.log(cleanGameState);
