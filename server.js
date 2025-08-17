@@ -699,7 +699,7 @@ setInterval(() => {
     //console.log(currentGameState);
 
 
-}, 1000);
+}, 100);
 
 
 

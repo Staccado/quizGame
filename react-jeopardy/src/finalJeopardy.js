@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { SocketContext } from './SocketContext';
 import './finalJeopardy.css';
 import DrawingBoard from './drawing';
-import JeopardyPodium from './podium';
+import PodiumContainer from './podium';
 
 export function FinalJeopardy({ gameState, player, isAdmin }) {
     const socket = useContext(SocketContext);
@@ -86,43 +86,35 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
     }
 
     return (
-        
         <div className="final-jeopardy-container">
-            {gameState.finalJeopardySpotlight ? (
+            <div className="final-jeopardy-content">
+                {gameState.finalJeopardySpotlight ? (
+                    <div className="final-jeopardy-spotlight-info">
+                        <h2>Answer Spotlight</h2>
+                        <h3>{gameState.players.find(p => p.id === gameState.finalJeopardySpotlight)?.name}</h3>
+                        <img src={gameState.finalJeopardyAnswers[gameState.finalJeopardySpotlight]} alt="Final Jeopardy Answer" />
+                    </div>
+                ) : !gameState.finalJeopardyRevealed ? (
+                    <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
+                        <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
+                        <label>
+                            Enter your wager:
+                            <input type="number" value={wager} onChange={(e) => setWager(e.target.value)} />
+                        </label>
+                        <button type="submit">Submit Wager</button>
+                    </form>
+                ) : (
+                    <form onSubmit={handleAnswerSubmit} className="final-jeopardy-form">
+                        <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
+                        <label>
+                            What is...
+                        </label>
+                        <DrawingBoard />
+                    </form>
+                )}
+            </div>
 
-                
-                <div>
-                    <h2>Answer Spotlight</h2>
-                    <h3>{gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).name}</h3>
-                    <img src={gameState.finalJeopardyAnswers[gameState.finalJeopardySpotlight]}/>
-                    
-                    <JeopardyPodium
-                    name={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).name}
-                    score={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).score}
-                    playerImage={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).playerImage}
-                    hasWebcam={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).webcamStream}
-                    />
-                </div>
-
-        ) : !gameState.finalJeopardyRevealed ? (
-                <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
-                    <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
-                    <label>
-                        Enter your wager:
-                        <input type="number" value={wager} onChange={(e) => setWager(e.target.value)} />
-                    </label>
-                    <button type="submit">Submit Wager</button>
-                </form>
-            ) : (
-                <form onSubmit={handleAnswerSubmit} className="final-jeopardy-form">
-                    <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
-                    <label>
-                        What is...
-                    </label>
-                    {/*  <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} />*/}
-                    <DrawingBoard/>
-                </form>
-            )}
+            <PodiumContainer spotlightPlayerId={gameState.finalJeopardySpotlight} />
         </div>
     );
 }

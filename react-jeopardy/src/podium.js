@@ -66,7 +66,7 @@ export function JeopardyPodium({ name = 'Player', score = 0, playerImage = '', h
   );
 }
 
-const PodiumContainer = () => {
+const PodiumContainer = ({ spotlightPlayerId }) => {
   const socket = useContext(SocketContext);
   const [players, setPlayers] = useState([]);
 
@@ -84,12 +84,16 @@ const PodiumContainer = () => {
     };
   }, [socket]);
 
+  const displayedPlayers = spotlightPlayerId
+    ? players.filter(player => player.id === spotlightPlayerId)
+    : players.filter(player => player.isConnected);
+
   return (
     <div className="podium-container">
-      {players.filter(player => player.isConnected).map((player, i) => (
-        <JeopardyPodium 
-          key={player.id || i} 
-          name={player.name ?? `Player ${i + 1}`} 
+      {displayedPlayers.map((player, i) => (
+        <JeopardyPodium
+          key={player.id || i}
+          name={player.name ?? `Player ${i + 1}`}
           score={player.score}
           playerImage={player.playerImage}
           hasWebcam={player.webcamStream}
