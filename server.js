@@ -119,6 +119,7 @@ class gameState {
         this.finalJeopardyWagers = {};
         this.finalJeopardyAnswers = {};
         this.finalJeopardyRevealed = false;
+        this.finalJeopardySpotlight = '';
 
     }
 
@@ -563,19 +564,68 @@ io.on('connection', (socket) => {
         io.emit('final-jeopardy-question-revealed', { question: currentGameState.finalJeopardyQuestion });
         console.log('Final Jeopardy question revealed.');
     });
+    
+    socket.on('revealFinalJeopardyAnswer', (data) =>{
+        console.log('revealing answer for player', data.player)
+        let playerAnswer = currentGameState.finalJeopardyAnswers[data.player]
+        currentGameState.finalJeopardySpotlight = data.player
+        io.emit('revealAnswer', data.player)
+        
+    });
 
     socket.on('submit-final-jeopardy-answer', (data) => {
+        // 'data' is now known to be the raw base64 string from the client.
+        console.log('Raw data received:', data);
+    
         const player = currentGameState.getPlayerById(socket.id);
-        if (player) {
-            currentGameState.finalJeopardyAnswers[player.id] = data.answer;
-            console.log(`Player ${player.name} answered: ${data.answer}`);
-            // Notify admin of the new answer
+    
+        // --- CHANGE 1: Modified the check ---
+        // If player not found, or if data is not a valid string.
+        if (!player || !data || typeof data !== 'string') {
+            console.error('Player not found or invalid drawing data received.');
+            return;
+        }
+    
+        console.log('Received drawing data from:', player.name);
+    
+        // --- CHANGE 2: Simplified the assignment ---
+        // Since 'data' is already the string we need, we assign it directly.
+        const drawingString = data;
+    
+        // 2. Split the string to get only the base64 part.
+        // This part is correct and doesn't need to change.
+        const base64Data = drawingString.split(',')[1];
+        
+        // Check if splitting worked, in case the prefix was missing.
+        if (!base64Data) {
+            console.error('Could not extract base64 data from string.');
+            return;
+        }
+    
+        // --- File Saving Logic (no changes needed below) ---
+        const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = `${uniquePrefix}-${player.name}-finalJeopardy.png`;
+        const filePath = path.join(playerImagesDir, fileName);
+    
+        const buffer = Buffer.from(base64Data, 'base64');
+    
+        fs.writeFile(filePath, buffer, (err) => {
+            if (err) {
+                console.error('Error saving image:', err);
+                return;
+            }
+    
+            const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+            console.log(`Player ${player.name}'s answer saved at: ${imageUrl}`);
+            
+            currentGameState.finalJeopardyAnswers[player.id] = imageUrl;
+    
             io.emit('admin-final-jeopardy-answer-submitted', {
                 playerId: player.id,
                 name: player.name,
-                answer: data.answer
+                answerUrl: imageUrl
             });
-        }
+        });
     });
 
     socket.on('final-jeopardy-ruling', (data) => {
@@ -599,7 +649,11 @@ io.on('connection', (socket) => {
         currentGameState.finalJeopardyAnswer = null;
         currentGameState.finalJeopardyWagers = {};
         currentGameState.finalJeopardyAnswers = {};
+        currentGameState.finalJeopardySpotlight = null;
         console.log('Final Jeopardy has ended.');
+    });
+    socket.on('printData', () =>{
+        console.log(currentGameState)
     });
 
     // server functions
@@ -637,6 +691,7 @@ setInterval(() => {
         finalJeopardyWagers: currentGameState.finalJeopardyWagers,
         finalJeopardyAnswers: currentGameState.finalJeopardyAnswers,
         finalJeopardyRevealed: currentGameState.finalJeopardyRevealed,
+        finalJeopardySpotlight: currentGameState.finalJeopardySpotlight
         // Note: buzzerTimeoutId is intentionally excluded as it's a Node.js timeout object
     };
    // console.log(cleanGameState);

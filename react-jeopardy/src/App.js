@@ -8,6 +8,7 @@ import { SocketContext } from './SocketContext';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import PlayerView from './PlayerView';
 import AdminView from './AdminView';
+import DrawingBoard from './drawing';
 import './App.css';
 
 const HomePage = () => {
@@ -113,6 +114,7 @@ const HomePage = () => {
       <Link to="/player">Go to Player View</Link>
       <br />
       <Link to="/admin">Go to Admin View</Link>
+      <Link to="/drawing">Go to Drawing</Link>
     </div>
   );
 };
@@ -133,6 +135,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/player" element={<PlayerView />} />
           <Route path="/admin" element={<AdminView />} />
+          <Route path="/drawing" element={<DrawingBoard/>}/>
         </Routes>
       </BrowserRouter>
     </SocketContext.Provider>

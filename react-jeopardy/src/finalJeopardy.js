@@ -1,11 +1,15 @@
 import React, { useState, useContext } from 'react';
 import { SocketContext } from './SocketContext';
 import './finalJeopardy.css';
+import DrawingBoard from './drawing';
+import JeopardyPodium from './podium';
 
 export function FinalJeopardy({ gameState, player, isAdmin }) {
     const socket = useContext(SocketContext);
     const [wager, setWager] = useState('');
     const [answer, setAnswer] = useState('');
+
+    
 
 
     const handleWagerSubmit = (e) => {
@@ -25,6 +29,16 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
     const handleRuling = (playerId, correct) => {
         socket.emit('final-jeopardy-ruling', { playerId, correct });
     };
+    const showAnswer = (playerId, answer) => {
+        console.log('revealing answer for', playerId)
+        let data = {player:playerId, 
+            answer:answer
+        }
+        socket.emit('revealFinalJeopardyAnswer',data)
+        socket.emit('printData')
+
+
+    }
 
     
 
@@ -56,9 +70,11 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                             const player = gameState.players.find(p => p.id === playerId);
                             return (
                                 <li key={playerId}>
-                                    <strong>{player ? player.name : 'Unknown'}:</strong> {answer}
+                                    <strong>{player ? player.name : 'Unknown'}:</strong> <img src={answer}/>
+                                    
                                     <button onClick={() => handleRuling(playerId, true)}>Correct</button>
                                     <button onClick={() => handleRuling(playerId, false)}>Incorrect</button>
+                                    <button onClick={() => showAnswer(playerId, answer)}>Show Answer</button>
                                 </li>
                             );
                         })}
@@ -70,10 +86,27 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
     }
 
     return (
+        
         <div className="final-jeopardy-container">
-            <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
-            {!gameState.finalJeopardyRevealed ? (
+            {gameState.finalJeopardySpotlight ? (
+
+                
+                <div>
+                    <h2>Answer Spotlight</h2>
+                    <h3>{gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).name}</h3>
+                    <img src={gameState.finalJeopardyAnswers[gameState.finalJeopardySpotlight]}/>
+                    
+                    <JeopardyPodium
+                    name={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).name}
+                    score={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).score}
+                    playerImage={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).playerImage}
+                    hasWebcam={gameState.players.find(p => p.id === gameState.finalJeopardySpotlight).webcamStream}
+                    />
+                </div>
+
+        ) : !gameState.finalJeopardyRevealed ? (
                 <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
+                    <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
                     <label>
                         Enter your wager:
                         <input type="number" value={wager} onChange={(e) => setWager(e.target.value)} />
@@ -85,9 +118,9 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                     <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
                     <label>
                         What is...
-                        <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} />
                     </label>
-                    <button type="submit">Submit Answer</button>
+                    {/*  <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} />*/}
+                    <DrawingBoard/>
                 </form>
             )}
         </div>

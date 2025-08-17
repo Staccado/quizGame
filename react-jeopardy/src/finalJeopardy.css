@@ -95,9 +95,9 @@
 }
 
 .final-jeopardy-form input, .final-jeopardy-form textarea {
-    padding: 10px;
+    padding: 0px;
     font-size: 24px;
-    width: 300px;
+   
     text-align: center;
     border-radius: 5px;
     border: 2px solid #ffcc00;
@@ -122,3 +122,4 @@
 .final-jeopardy-form button:hover {
     background-color: #45a049;
 }
+
