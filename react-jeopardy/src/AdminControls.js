@@ -32,11 +32,18 @@ const AdminControls = ({ gameState }) => {
     }
   };
 
+  const handleStartFinalJeopardy = () => {
+    if (socket) {
+      socket.emit('start-final-jeopardy', { category: 'FINAL JEOPARDY', question: 'This is the Final Jeopardy question.', answer: 'This is the answer.' });
+    }
+  };
+
   const dailyDoublePlayer = gameState && gameState.players.find(p => p.id === gameState.dailyDoublePlayer);
 
   return (
     <div className="admin-controls">
       <h2>Admin Controls</h2>
+      <button onClick={handleStartFinalJeopardy}>Start Final Jeopardy</button>
 
       {gameState && gameState.dailyDouble && gameState.questionActive && (
         <div className="daily-double-controls">

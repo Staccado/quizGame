@@ -73,15 +73,7 @@ const AdminView = () => {
     }
   };
 
-  const handleStartFinalJeopardy = () => {
-    // In a real app, you'd have a form to get this data
-    const finalJeopardyData = {
-      category: 'FINAL JEOPARDY',
-      question: 'This is the Final Jeopardy question.',
-      answer: 'This is the answer.'
-    };
-    socket.emit('start-final-jeopardy', finalJeopardyData);
-  };
+  
 
   return (
     <div className="App">
@@ -103,7 +95,7 @@ const AdminView = () => {
                 highlightedPlayer={getPlayerForRightOrWrong()} 
               />
               <AdminControls gameState={gameState} />
-              <button onClick={handleStartFinalJeopardy}>Start Final Jeopardy</button>
+              
             </>
           )}
         </>

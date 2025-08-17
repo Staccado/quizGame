@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+Jeopardy2.0.code-workspace
+node_modules
+

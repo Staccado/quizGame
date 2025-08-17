@@ -1,10 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { SocketContext } from './SocketContext';
+import './finalJeopardy.css';
 
 export function FinalJeopardy({ gameState, player, isAdmin }) {
     const socket = useContext(SocketContext);
     const [wager, setWager] = useState('');
     const [answer, setAnswer] = useState('');
+
 
     const handleWagerSubmit = (e) => {
         e.preventDefault();
@@ -24,16 +26,12 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
         socket.emit('final-jeopardy-ruling', { playerId, correct });
     };
 
-    const handleStartFinalJeopardy = () => {
-        // This should be moved to AdminView, and should get the category, question, and answer from a form
-        socket.emit('start-final-jeopardy', { category: 'Test Category', question: 'Test Question', answer: 'Test Answer' });
-    };
+    
 
     if (isAdmin) {
         return (
-            <div>
+            <div className="final-jeopardy-admin-container">
                 <h1>Final Jeopardy - Admin</h1>
-                <button onClick={handleStartFinalJeopardy}>Start Final Jeopardy</button>
                 <button onClick={handleRevealQuestion}>Reveal Question</button>
                 {gameState.finalJeopardyRevealed && (
                     <h3>Question: {gameState.finalJeopardyQuestion}</h3>
@@ -72,22 +70,21 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Final Jeopardy</h1>
-            <h2>{gameState.finalJeopardyCategory}</h2>
+        <div className="final-jeopardy-container">
+            <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
             {!gameState.finalJeopardyRevealed ? (
-                <form onSubmit={handleWagerSubmit}>
+                <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
                     <label>
-                        Wager:
+                        Enter your wager:
                         <input type="number" value={wager} onChange={(e) => setWager(e.target.value)} />
                     </label>
                     <button type="submit">Submit Wager</button>
                 </form>
             ) : (
-                <form onSubmit={handleAnswerSubmit}>
-                    <h3>{gameState.finalJeopardyQuestion}</h3>
+                <form onSubmit={handleAnswerSubmit} className="final-jeopardy-form">
+                    <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
                     <label>
-                        Answer:
+                        What is...
                         <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} />
                     </label>
                     <button type="submit">Submit Answer</button>

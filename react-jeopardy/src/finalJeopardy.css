@@ -1,0 +1,124 @@
+
+.final-jeopardy-container {
+    background-color: rgb(0, 0, 169);
+    font-family: 'Swiss911 UCm BT', sans-serif;
+    text-shadow: 2px .5px 0px black;
+    font-style: bold;
+    font-size: clamp(24px, 4vw, 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 4px solid black;
+    box-shadow: 0px 0px 10px 0px rgb(0, 0, 0);
+    text-align: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease-in;
+    pointer-events: auto;
+    overflow-y: auto;
+    padding: 20px;
+    box-sizing: border-box;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.final-jeopardy-admin-container {
+    padding: 20px;
+    background-color: #06063a;
+    border-radius: 8px;
+    margin: 20px;
+    color: white;
+}
+
+.final-jeopardy-admin-container h1, .final-jeopardy-admin-container h3 {
+    color: #ff9800;
+}
+
+.final-jeopardy-admin-container button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.final-jeopardy-admin-container button:hover {
+    background-color: #45a049;
+}
+
+.final-jeopardy-admin-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.final-jeopardy-admin-container li {
+    background-color: #1a1a4a;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.final-jeopardy-category {
+    color: white;
+    font-size: clamp(40px, 2.5vw, 100px);
+    margin-bottom: 10px;
+}
+
+.final-jeopardy-question {
+    color: white;
+    max-width: 80%;
+    padding: 20px;
+    line-height: 1.4;
+    font-size: clamp(75px, 3.5vw, 200px);
+    margin-top: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.final-jeopardy-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.final-jeopardy-form label {
+    font-size: 24px;
+}
+
+.final-jeopardy-form input, .final-jeopardy-form textarea {
+    padding: 10px;
+    font-size: 24px;
+    width: 300px;
+    text-align: center;
+    border-radius: 5px;
+    border: 2px solid #ffcc00;
+}
+
+.final-jeopardy-form textarea {
+    height: 100px;
+}
+
+.final-jeopardy-form button {
+    padding: 12px 25px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.final-jeopardy-form button:hover {
+    background-color: #45a049;
+}
