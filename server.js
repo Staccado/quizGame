@@ -748,7 +748,9 @@ setInterval(() => {
         finalJeopardyRevealed: currentGameState.finalJeopardyRevealed,
         finalJeopardySpotlight: currentGameState.finalJeopardySpotlight,
         finalJeopardyTimer: currentGameState.finalJeopardyTimer,
-        playerShowcase: currentGameState.playerShowcase
+        playerShowcase: currentGameState.playerShowcase,
+        finalJeopardyWagers: currentGameState.finalJeopardyWagers,
+        finalJeopardyAnswers: currentGameState.finalJeopardyAnswers
 
         // Note: buzzerTimeoutId is intentionally excluded as it's a Node.js timeout object
     };

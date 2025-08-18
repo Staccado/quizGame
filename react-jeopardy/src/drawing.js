@@ -4,7 +4,7 @@ import { ReactSketchCanvas } from 'react-sketch-canvas';
 import "./drawing.css"
 import { SocketContext } from './SocketContext';
 
-function DrawingBoard() {
+function DrawingBoard({onSubmit}) {
   const socket = useContext(SocketContext);
   // The ref is still the same
   const canvasRef = useRef(null);
@@ -18,7 +18,7 @@ function DrawingBoard() {
         .then(imageData => {
           // imageData is the base64 encoded PNG
 
-          sendToServer(imageData);
+          onSubmit(imageData);
         })
         .catch(e => {
           console.error(e);
@@ -38,11 +38,6 @@ function DrawingBoard() {
     }
   };
   
-  const sendToServer = async (imageData) => {
-    console.log("Sending this data URL to the server:", imageData);
-    socket.emit('submit-final-jeopardy-answer', imageData)
-  };
-
   return (
     <div id="rootDraw">
    

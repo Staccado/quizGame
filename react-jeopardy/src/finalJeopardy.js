@@ -7,19 +7,14 @@ import PodiumContainer from './podium';
 export function FinalJeopardy({ gameState, player, isAdmin }) {
     const socket = useContext(SocketContext);
     const [wager, setWager] = useState('');
-    const [answer, setAnswer] = useState('');
-
-    
-
 
     const handleWagerSubmit = (e) => {
         e.preventDefault();
         socket.emit('submit-final-jeopardy-wager', { wager });
     };
 
-    const handleAnswerSubmit = (e) => {
-        e.preventDefault();
-        socket.emit('submit-final-jeopardy-answer', { answer });
+    const handleDrawingSubmit = (imageData) => {
+        socket.emit('submit-final-jeopardy-answer', imageData);
     };
 
     const handleRevealQuestion = () => {
@@ -54,7 +49,7 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                 <div>
                     <h3>Wagers:</h3>
                     <ul>
-                        {Object.entries(gameState.finalJeopardyWagers).map(([playerId, wager]) => {
+                        {gameState.finalJeopardyWagers && Object.entries(gameState.finalJeopardyWagers).map(([playerId, wager]) => {
                             const player = gameState.players.find(p => p.id === playerId);
                             return (
                                 <li key={playerId}>
@@ -67,7 +62,7 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                 <div>
                     <h3>Answers:</h3>
                     <ul>
-                        {Object.entries(gameState.finalJeopardyAnswers).map(([playerId, answer]) => {
+                        {gameState.finalJeopardyAnswers && Object.entries(gameState.finalJeopardyAnswers).map(([playerId, answer]) => {
                             const player = gameState.players.find(p => p.id === playerId);
                             return (
                                 <li key={playerId}>
@@ -115,14 +110,14 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
             // Assuming the timer running is what allows submission, not what shows the component.
             if (gameState.finalJeopardyTimer > 0) {
                 return (
-                    <form onSubmit={handleAnswerSubmit} className="final-jeopardy-form">
+                    <div className="final-jeopardy-form">
                         <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
                         <h3 className="final-jeopardy-timer">{gameState.finalJeopardyTimer}</h3>
                         <label>
                             What is...
                         </label>
-                        <DrawingBoard />
-                    </form>
+                        <DrawingBoard onSubmit={handleDrawingSubmit} />
+                    </div>
                 );
             }
             else{
