@@ -47,6 +47,7 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
             <div className="final-jeopardy-admin-container">
                 <h1>Final Jeopardy - Admin</h1>
                 <button onClick={handleRevealQuestion}>Reveal Question</button>
+                <button onClick={() => socket.emit('startFinalJeopardyTimer')}>Start Timer</button>
                 {gameState.finalJeopardyRevealed && (
                     <h3>Question: {gameState.finalJeopardyQuestion}</h3>
                 )}
@@ -75,6 +76,7 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                                     <button onClick={() => handleRuling(playerId, true)}>Correct</button>
                                     <button onClick={() => handleRuling(playerId, false)}>Incorrect</button>
                                     <button onClick={() => showAnswer(playerId, answer)}>Show Answer</button>
+                                    
                                 </li>
                             );
                         })}
@@ -85,16 +87,19 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
         );
     }
 
-    return (
-        <div className="final-jeopardy-container">
-            <div className="final-jeopardy-content">
-                {gameState.finalJeopardySpotlight ? (
+    const renderFinalJeopardy = () => {
+        const renderContent = () => {
+            if (gameState.finalJeopardySpotlight) {
+                return (
                     <div className="final-jeopardy-spotlight-info">
                         <h2>Answer Spotlight</h2>
                         <h3>{gameState.players.find(p => p.id === gameState.finalJeopardySpotlight)?.name}</h3>
                         <img src={gameState.finalJeopardyAnswers[gameState.finalJeopardySpotlight]} alt="Final Jeopardy Answer" />
                     </div>
-                ) : !gameState.finalJeopardyRevealed ? (
+                );
+            }
+            if (!gameState.finalJeopardyRevealed) {
+                return (
                     <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
                         <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
                         <label>
@@ -103,18 +108,41 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                         </label>
                         <button type="submit">Submit Wager</button>
                     </form>
-                ) : (
+                );
+            }
+
+            // When final jeopardy is revealed, but before the timer starts or after it ends, show the question and drawing board.
+            // Assuming the timer running is what allows submission, not what shows the component.
+            if (gameState.finalJeopardyTimer > 0) {
+                return (
                     <form onSubmit={handleAnswerSubmit} className="final-jeopardy-form">
                         <h3 className="final-jeopardy-question">{gameState.finalJeopardyQuestion}</h3>
+                        <h3 className="final-jeopardy-timer">{gameState.finalJeopardyTimer}</h3>
                         <label>
                             What is...
                         </label>
                         <DrawingBoard />
                     </form>
-                )}
-            </div>
+                );
+            }
+            else{
+                return (
+                    <h3>Time's up!</h3>
+                )
+            }
+        };
 
-            <PodiumContainer spotlightPlayerId={gameState.finalJeopardySpotlight} />
-        </div>
-    );
-}
+        return (
+            <div className="final-jeopardy-container">
+                <div className="final-jeopardy-content">
+                    {renderContent()}
+                </div>
+                <PodiumContainer spotlightPlayerId={gameState.finalJeopardySpotlight} />
+            </div>
+        );
+    };
+
+    return renderFinalJeopardy();
+};
+
+export default FinalJeopardy;

@@ -37,10 +37,12 @@ const PlayerView = () => {
     }
 
     socket.on('connect', handleConnect);
+
     socket.on('gameTick', (newGameState) => {
         setGameState(newGameState);
         const currentPlayer = newGameState.players.find(p => p.id === socket.id);
         setPlayer(currentPlayer);
+
     });
     //socket.on('question', setQuestion);
     socket.on('disconnect', () => console.log('Player disconnected.'));
@@ -51,30 +53,40 @@ const PlayerView = () => {
         socket.off('disconnect');
     };
   }, [socket]);
-
-  return (
-    <div className="App">
-      {gameState ? (
-        <>
-            {gameState.finalJeopardyActive ? (
-                <FinalJeopardy gameState={gameState} player={player} isAdmin={false} />
-            ) : (
-                <>
-                    <div className="board-area-container">
-                        <Board boardData={gameState.board} isAdmin={false} />
-                        <QuestionScreen gameState={gameState} />
-                    </div>
-                    <Podium />
-                    {/* Buzzer component for players */}
-                    <Buzzer gameState={gameState} />
-                </>
-            )}
-        </>
-      ) : (
+  
+  if (!gameState) {
+    return (
+      <div className="App">
         <h1>Waiting for game to start...</h1>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  if (gameState.playerShowcase.active) {
+    return (
+      <div className="App">
+        <h1>Player Showcase</h1>
+      </div>
+    );
+  }
+  if (gameState.finalJeopardyActive) {
+    return (
+      <div className="App">
+        <FinalJeopardy gameState={gameState} player={player} isAdmin={false} />
+      </div>
+    );
+  } else {
+    return (
+      <div className="App">
+        <div className="board-area-container">
+          <Board boardData={gameState.board} isAdmin={false} />
+          <QuestionScreen gameState={gameState} />
+        </div>
+        <Podium />
+        <Buzzer gameState={gameState} />
+      </div>
+    );
+  }
 };
 
 export default PlayerView;

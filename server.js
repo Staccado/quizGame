@@ -120,6 +120,12 @@ class gameState {
         this.finalJeopardyAnswers = {};
         this.finalJeopardyRevealed = false;
         this.finalJeopardySpotlight = '';
+        this.finalJeopardyTimer = 0;
+        this.playerShowcase = {
+            active: false,
+            player: null,
+
+        }
 
     }
 
@@ -543,6 +549,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('start-final-jeopardy', (data) => {
+        currentGameState.finalJeopardyTimer = 30;
         currentGameState.finalJeopardyActive = true;
         currentGameState.finalJeopardyCategory = data.category;
         currentGameState.finalJeopardyQuestion = data.question;
@@ -564,7 +571,28 @@ io.on('connection', (socket) => {
         io.emit('final-jeopardy-question-revealed', { question: currentGameState.finalJeopardyQuestion });
         console.log('Final Jeopardy question revealed.');
     });
-    
+
+    socket.on('startFinalJeopardyTimer', () => {   
+        currentGameState.finalJeopardyTimer = 30;
+        const timerInterval = setInterval(() => {
+            currentGameState.finalJeopardyTimer--;
+            if (currentGameState.finalJeopardyTimer <= 0) {
+                currentGameState.finalJeopardyTimer = 0;
+                io.emit('final-jeopardy-timer-ended');
+                clearInterval(timerInterval);
+            }
+            io.emit('final-jeopardy-timer-tick', { timer: currentGameState.finalJeopardyTimer });
+            console.log('Final Jeopardy timer:', currentGameState.finalJeopardyTimer);
+        }, 1000);
+        currentGameState.finalJeopardyTimerId = timerInterval;
+        io.emit('final-jeopardy-timer-started', { timer: currentGameState.finalJeopardyTimer });
+        console.log('Final Jeopardy timer started.');
+    });
+
+    socket.on('finalJeopardyTimerTick', () => {
+        currentGameState.finalJeopardyTimer--;
+        io.emit('final-jeopardy-timer-tick', { timer: currentGameState.finalJeopardyTimer });
+    });
     socket.on('revealFinalJeopardyAnswer', (data) =>{
         console.log('revealing answer for player', data.player)
         let playerAnswer = currentGameState.finalJeopardyAnswers[data.player]
@@ -650,18 +678,51 @@ io.on('connection', (socket) => {
         currentGameState.finalJeopardyWagers = {};
         currentGameState.finalJeopardyAnswers = {};
         currentGameState.finalJeopardySpotlight = null;
+        currentGameState.finalJeopardyTimer = 0;
+        clearInterval(currentGameState.finalJeopardyTimerId);
+        currentGameState.finalJeopardyTimerId = null;
+        
+
         console.log('Final Jeopardy has ended.');
     });
     socket.on('printData', () =>{
         console.log(currentGameState)
     });
 
+    socket.on('playerShowcase',() =>{
+        let index = 0;
+        currentGameState.playerShowcase.active = true;
+        currentGameState.playerShowcase.player = currentGameState.players[index];
+        console.log('data set')
+        
+        io.emit('playerShowcase', currentGameState.playerShowcase.player);
+
+        const showcaseInterval = setInterval(() => {
+            index++;
+            if (index >= currentGameState.players.length) {
+                currentGameState.playerShowcase.active = false;
+                currentGameState.playerShowcase.player = null;
+                clearInterval(showcaseInterval);
+                io.emit('playerShowcase', null);
+                console.log('showcase ended')
+            } else {
+                currentGameState.playerShowcase.player = currentGameState.players[index];
+                io.emit('playerShowcase', currentGameState.playerShowcase.player);
+                console.log('showcasing player inside else block', currentGameState.playerShowcase.player.name)
+            }
+        }, 5000);
+        console.log('showcasing player outside else block', currentGameState.playerShowcase.player.name)
+
+
+
+    });
+
+
     // server functions
 
 
 
 });
-
 
 
 
@@ -688,10 +749,11 @@ setInterval(() => {
         finalJeopardyActive: currentGameState.finalJeopardyActive,
         finalJeopardyCategory: currentGameState.finalJeopardyCategory,
         finalJeopardyQuestion: currentGameState.finalJeopardyQuestion,
-        finalJeopardyWagers: currentGameState.finalJeopardyWagers,
-        finalJeopardyAnswers: currentGameState.finalJeopardyAnswers,
         finalJeopardyRevealed: currentGameState.finalJeopardyRevealed,
-        finalJeopardySpotlight: currentGameState.finalJeopardySpotlight
+        finalJeopardySpotlight: currentGameState.finalJeopardySpotlight,
+        finalJeopardyTimer: currentGameState.finalJeopardyTimer,
+        playerShowcase: currentGameState.playerShowcase
+
         // Note: buzzerTimeoutId is intentionally excluded as it's a Node.js timeout object
     };
    // console.log(cleanGameState);
@@ -700,6 +762,3 @@ setInterval(() => {
 
 
 }, 100);
-
-
-

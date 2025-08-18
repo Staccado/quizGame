@@ -38,13 +38,19 @@ const AdminControls = ({ gameState }) => {
     }
   };
 
+  const handlePlayerShowcase = () => {
+    if (socket) {
+      socket.emit('playerShowcase');
+    }
+  };
+
   const dailyDoublePlayer = gameState && gameState.players.find(p => p.id === gameState.dailyDoublePlayer);
 
   return (
     <div className="admin-controls">
       <h2>Admin Controls</h2>
       <button onClick={handleStartFinalJeopardy}>Start Final Jeopardy</button>
-
+      <button onClick={handlePlayerShowcase}>Player Showcase</button>
       {gameState && gameState.dailyDouble && gameState.questionActive && (
         <div className="daily-double-controls">
           <h3>Daily Double!</h3>
