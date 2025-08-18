@@ -63,9 +63,12 @@ const PlayerView = () => {
   }
 
   if (gameState.playerShowcase.active) {
+    const showcasedPlayer = gameState.players.find(p => p.id === gameState.finalJeopardySpotlight);
     return (
       <div className="App">
         <h1>Player Showcase</h1>
+        {showcasedPlayer && <h2>{showcasedPlayer.name}</h2>}
+        <Podium spotlightPlayerId={showcasedPlayer.id} />
       </div>
     );
   }

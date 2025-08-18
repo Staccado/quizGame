@@ -690,31 +690,27 @@ io.on('connection', (socket) => {
     });
 
     socket.on('playerShowcase',() =>{
+        console.log('starting showcase')
         let index = 0;
+        console.log('showcasing player', currentGameState.players[index].name)
         currentGameState.playerShowcase.active = true;
-        currentGameState.playerShowcase.player = currentGameState.players[index];
-        console.log('data set')
+        // Set the initial spotlight
+        if (currentGameState.players.length > 0) {
+            currentGameState.finalJeopardySpotlight = currentGameState.players[index].id;
+        }
         
-        io.emit('playerShowcase', currentGameState.playerShowcase.player);
-
         const showcaseInterval = setInterval(() => {
             index++;
             if (index >= currentGameState.players.length) {
                 currentGameState.playerShowcase.active = false;
-                currentGameState.playerShowcase.player = null;
+                currentGameState.finalJeopardySpotlight = null; // Clear spotlight
                 clearInterval(showcaseInterval);
-                io.emit('playerShowcase', null);
                 console.log('showcase ended')
             } else {
-                currentGameState.playerShowcase.player = currentGameState.players[index];
-                io.emit('playerShowcase', currentGameState.playerShowcase.player);
-                console.log('showcasing player inside else block', currentGameState.playerShowcase.player.name)
+                currentGameState.finalJeopardySpotlight = currentGameState.players[index].id;
+                console.log('showcasing player', currentGameState.players[index].name)
             }
         }, 5000);
-        console.log('showcasing player outside else block', currentGameState.playerShowcase.player.name)
-
-
-
     });
 
 
