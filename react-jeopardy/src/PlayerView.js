@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, Profiler } from 'react';
 import { SocketContext } from './SocketContext';
 import Board from './Board';
 import Buzzer from './buzzer';
@@ -13,6 +13,10 @@ const PlayerView = () => {
   const socket = useContext(SocketContext);
   const [gameState, setGameState] = useState(null);
   const [player, setPlayer] = useState(null);
+
+  const profilerCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime, interactions) => {
+    console.log(`${id} phase: ${phase}, actual time: ${actualDuration}, base time: ${baseDuration}`);
+  };
 
 
   useEffect(() => {
@@ -68,7 +72,6 @@ const PlayerView = () => {
       <div className="App">
         <h1>Player Showcase</h1>
         {showcasedPlayer && <h2>{showcasedPlayer.name}</h2>}
-        <Podium spotlightPlayerId={showcasedPlayer.id} />
       </div>
     );
   }
@@ -82,7 +85,9 @@ const PlayerView = () => {
     return (
       <div className="App">
         <div className="board-area-container">
-          <Board boardData={gameState.board} isAdmin={false} />
+          <Profiler id="BoardProfiler" onRender={profilerCallback}>
+            <Board boardData={gameState.board} isAdmin={false} />
+          </Profiler>
           <QuestionScreen gameState={gameState} />
         </div>
         <Podium />

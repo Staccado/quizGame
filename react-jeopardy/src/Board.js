@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, memo } from 'react';
 import { SocketContext } from './SocketContext';
 import './Board.css';
 
@@ -70,4 +70,14 @@ const Board = ({ boardData, isAdmin, onQuestionSelected }) => {
   );
 };
 
-export default Board;
+// Custom comparison function for React.memo
+// This prevents re-rendering unless the board data or admin status actually changes.
+const areBoardsEqual = (prevProps, nextProps) => {
+  // Using JSON.stringify is a simple way to deep compare, but not the most performant.
+  // For this app's scale, it's perfectly fine. In larger apps, consider a library like lodash.isEqual.
+  const isBoardDataEqual = JSON.stringify(prevProps.boardData) === JSON.stringify(nextProps.boardData);
+  const isAdminEqual = prevProps.isAdmin === nextProps.isAdmin;
+  return isBoardDataEqual && isAdminEqual;
+};
+
+export default memo(Board, areBoardsEqual);
