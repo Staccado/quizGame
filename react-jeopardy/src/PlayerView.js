@@ -20,8 +20,8 @@ const PlayerView = () => {
 
 
   useEffect(() => {
-    const playerImage = localStorage.getItem('playerImage');
     const playerName = localStorage.getItem('playerName') || 'ReactPlayer';
+    const playerImage = localStorage.getItem(`playerImage_${playerName}`);
 
     const playerData = {
         name: playerName,

@@ -247,8 +247,15 @@ io.on('connection', (socket) => {
         const reconnectedPlayer = currentGameState.reconnectPlayer(playerName, playerid);
 
         if (reconnectedPlayer) {
-            reconnectedPlayer.playerImage = playerImage;
+            // Don't overwrite the player's original image during reconnection
+            // The playerImage from client might be wrong due to localStorage sharing
             console.log(`Player ${reconnectedPlayer.name} reconnected with new ID: ${playerid}`);
+            
+            // If the reconnected player doesn't have an image, use the one from client
+            if (!reconnectedPlayer.playerImage && playerImage) {
+                reconnectedPlayer.playerImage = playerImage;
+                console.log(`Assigned image to reconnected player ${reconnectedPlayer.name}`);
+            }
         } else {
             const existingPlayer = currentGameState.getPlayerById(playerid);
             if (!existingPlayer) {
@@ -281,6 +288,13 @@ io.on('connection', (socket) => {
                 return;
             }
             const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+            
+            // Update the player's image in the game state
+            const player = currentGameState.getPlayerById(socket.id);
+            if (player) {
+                player.playerImage = imageUrl;
+            }
+            
             socket.emit('imageUploaded', { imageUrl });
         });
     });

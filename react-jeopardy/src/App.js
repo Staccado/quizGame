@@ -20,6 +20,13 @@ const HomePage = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || 'Your Name');
 
+  // Add useEffect to emit playerName when it changes
+  useEffect(() => {
+    if (socket && playerName.trim()) {
+      socket.emit('setDisplayName', playerName);
+    }
+  }, [playerName, socket]); // Depend on playerName and socket
+
   const onCropComplete = useCallback(async (c) => {
     setCroppedAreaPixels(c);
     try {
@@ -69,7 +76,8 @@ const HomePage = () => {
 
   useEffect(() => {
     const handleImageUploaded = (data) => {
-      localStorage.setItem('playerImage', data.imageUrl);
+      const playerName = localStorage.getItem('playerName') || 'Player';
+      localStorage.setItem(`playerImage_${playerName}`, data.imageUrl);
     };
 
     socket.on('imageUploaded', handleImageUploaded);
@@ -83,8 +91,12 @@ const HomePage = () => {
     <div className='home-nav'>
       <h1>Welcome to Jeopardy!</h1>
       <div>
-        <input type="text" value={playerName} onChange={(e) => {setPlayerName(e.target.value); localStorage.setItem('playerName', e.target.value);}} placeholder="Enter Your Name" />
-        <input type="file" onChange={onFileChange} accept="image/*" />
+        <label htmlFor="playerNameInput">Your Display Name:</label>
+        <input id="playerNameInput" type="text" value={playerName} onChange={(e) => {setPlayerName(e.target.value); localStorage.setItem('playerName', e.target.value);}} placeholder="Enter Your Name" />
+      </div>
+      <div>
+        <label htmlFor="playerImageInput">Choose Profile Image:</label>
+        <input id="playerImageInput" type="file" onChange={onFileChange} accept="image/*" />
       </div>
       {imageSrc && (
         <div>
