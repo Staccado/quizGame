@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext, Profiler } from 'react';
 import { SocketContext } from './SocketContext';
 import Board from './Board';
 import Buzzer from './buzzer';
-import Podium from './podium';
+import PodiumContainer, { JeopardyPodium } from './podium';
 import QuestionScreen from './questionScreen';
 import { FinalJeopardy } from './finalJeopardy';
 
@@ -15,7 +15,7 @@ const PlayerView = () => {
   const [player, setPlayer] = useState(null);
 
   const profilerCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime, interactions) => {
-    console.log(`${id} phase: ${phase}, actual time: ${actualDuration}, base time: ${baseDuration}`);
+    //console.log(`${id} phase: ${phase}, actual time: ${actualDuration}, base time: ${baseDuration}`);
   };
 
 
@@ -72,6 +72,13 @@ const PlayerView = () => {
       <div className="App">
         <h1>Player Showcase</h1>
         {showcasedPlayer && <h2>{showcasedPlayer.name}</h2>}
+        <JeopardyPodium
+                    name={showcasedPlayer.name}
+                    score={showcasedPlayer.score}
+                    playerImage={showcasedPlayer.playerImage}
+                    hasWebcam={showcasedPlayer.webcamStream}
+                    className="daily-double-podium"
+                />
       </div>
     );
   }
@@ -90,7 +97,7 @@ const PlayerView = () => {
           </Profiler>
           <QuestionScreen gameState={gameState} />
         </div>
-        <Podium />
+        <PodiumContainer />
         <Buzzer gameState={gameState} />
       </div>
     );

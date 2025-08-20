@@ -18,7 +18,7 @@ testBoardLayout = [
       "categoryName": "Test",
       "questions": [
         { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris", "dailyDouble": true },
-        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDobule":true },
+        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDouble":true },
         { "value": 600, "answered": false, "question": "What is the capital of Italy?", "answer": "Rome" },
         { "value": 800, "answered": false, "question": "What is the capital of Spain?", "answer": "Madrid" },
         { "value": 1000, "answered": false, "question": "What is the capital of Portugal?", "answer": "Lisbon" },
@@ -712,6 +712,8 @@ io.on('connection', (socket) => {
         if (currentGameState.players.length > 0) {
             currentGameState.finalJeopardySpotlight = currentGameState.players[index].id;
         }
+
+        console.log('gamestate after enabling showcase', currentGameState)
         
         const showcaseInterval = setInterval(() => {
             index++;
@@ -722,7 +724,8 @@ io.on('connection', (socket) => {
                 console.log('showcase ended')
             } else {
                 currentGameState.finalJeopardySpotlight = currentGameState.players[index].id;
-                console.log('showcasing player', currentGameState.players[index].name)
+                currentGameState.playerShowcase.player = currentGameState.players[index].id;
+                console.log('showcasing player', currentGameState.players[index].name);
             }
         }, 5000);
     });
@@ -766,7 +769,6 @@ setInterval(() => {
         finalJeopardyWagers: currentGameState.finalJeopardyWagers,
         finalJeopardyAnswers: currentGameState.finalJeopardyAnswers
 
-        // Note: buzzerTimeoutId is intentionally excluded as it's a Node.js timeout object
     };
    // console.log(cleanGameState);
     io.emit('gameTick', cleanGameState);
