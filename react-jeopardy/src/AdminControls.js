@@ -44,6 +44,12 @@ const AdminControls = ({ gameState }) => {
     }
   };
 
+  const handleStartDoubleJeopardy = () => {
+    if (socket) {
+      socket.emit('startDoubleJeopardy');
+    }
+  };
+
   const dailyDoublePlayer = gameState && gameState.players.find(p => p.id === gameState.dailyDoublePlayer);
 
   return (
@@ -73,6 +79,7 @@ const AdminControls = ({ gameState }) => {
             <button onClick={() => handleSetPlayerControl(player.id)}>Set Control</button>
             <button onClick={() => handleAwardPoints(player.id, 1000)}>+1000</button>
             <button onClick={() => handleAwardPoints(player.id, -1000)}>-1000</button>
+            <button onClick={handleStartDoubleJeopardy}>Start Double Jeopardy</button>
           </div>
         ))}
       </div>

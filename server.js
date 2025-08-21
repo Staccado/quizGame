@@ -76,6 +76,69 @@ testBoardLayout = [
     }
   ];
 
+  testBoardLayout2 = [
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris", "dailyDouble": true },
+        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDouble":true },
+        { "value": 600, "answered": false, "question": "What is the capital of Italy?", "answer": "Rome" },
+        { "value": 800, "answered": false, "question": "What is the capital of Spain?", "answer": "Madrid" },
+        { "value": 1000, "answered": false, "question": "What is the capital of Portugal?", "answer": "Lisbon" },
+      ]
+    },
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris" },
+        { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin" },
+        { "value": 600, "answered": false, "question": "What is the capital of Italy?", "answer": "Rome" },
+        { "value": 800, "answered": false, "question": "What is the capital of Spain?", "answer": "Madrid" },
+        { "value": 1000, "answered": false, "question": "What is the capital of Portugal?", "answer": "Lisbon" },
+      ]
+    },
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false },
+        { "value": 400, "answered": false },
+        { "value": 600, "answered": false },
+        { "value": 800, "answered": false },
+        { "value": 1000, "answered": false },
+      ]
+    },
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false },
+        { "value": 400, "answered": false },
+        { "value": 600, "answered": false },
+        { "value": 800, "answered": false },
+        { "value": 1000, "answered": false },
+      ]
+    },
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false },
+        { "value": 400, "answered": false },
+        { "value": 600, "answered": false },
+        { "value": 800, "answered": false },
+        { "value": 1000, "answered": false },
+      ]
+    },
+    {
+      "categoryName": "DoubleJeopardy",
+      "questions": [
+        { "value": 200, "answered": false },
+        { "value": 400, "answered": false },
+        { "value": 600, "answered": false },
+        { "value": 800, "answered": false },
+        { "value": 1000, "answered": false },
+      ]
+    }
+  ];
+
 
 allQuestions = {
     categories: ["test1", 'test2', 'test3','test4','test5','test6'],
@@ -268,6 +331,13 @@ io.on('connection', (socket) => {
         if (playerWebcam) {
             startWebcamStream(playerid);
         }
+    });
+
+    socket.on('startDoubleJeopardy', (data) => {
+
+        currentGameState.board = testBoardLayout2;
+
+        //start double jeopardy
     });
 
     socket.on('disconnect', () => {
