@@ -10,6 +10,16 @@ if (!fs.existsSync(playerImagesDir)) {
     fs.mkdirSync(playerImagesDir);
 }
 app.use('/playerimages', express.static(playerImagesDir));
+app.use('/audio', (req, res, next) => {
+    const filePath = path.join(__dirname, 'audio', req.url);
+    const ext = path.extname(filePath);
+    if (ext === '.mp3') {
+      res.setHeader('Content-Type', 'audio/mpeg');
+    }
+    next();
+  }, express.static(path.join(__dirname, 'audio')));
+
+const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-production-domain.com' : 'http://localhost:3001';
 let buzzerArray = [];
 let previousBuzzerArray = [];
 
@@ -78,7 +88,7 @@ testBoardLayout = [
 
   testBoardLayout2 = [
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy1",
       "questions": [
         { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris", "dailyDouble": true },
         { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDouble":true },
@@ -88,7 +98,7 @@ testBoardLayout = [
       ]
     },
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy2",
       "questions": [
         { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris" },
         { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin" },
@@ -98,7 +108,7 @@ testBoardLayout = [
       ]
     },
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy3",
       "questions": [
         { "value": 200, "answered": false },
         { "value": 400, "answered": false },
@@ -108,7 +118,7 @@ testBoardLayout = [
       ]
     },
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy4",
       "questions": [
         { "value": 200, "answered": false },
         { "value": 400, "answered": false },
@@ -118,7 +128,7 @@ testBoardLayout = [
       ]
     },
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy5",
       "questions": [
         { "value": 200, "answered": false },
         { "value": 400, "answered": false },
@@ -128,7 +138,7 @@ testBoardLayout = [
       ]
     },
     {
-      "categoryName": "DoubleJeopardy",
+      "categoryName": "DoubleJeopardy6",
       "questions": [
         { "value": 200, "answered": false },
         { "value": 400, "answered": false },
@@ -140,10 +150,7 @@ testBoardLayout = [
   ];
 
 
-allQuestions = {
-    categories: ["test1", 'test2', 'test3','test4','test5','test6'],
-    questions: []
-};
+
 
 // Configure CORS for Socket.IO
 const io = socketio(server, {
@@ -271,7 +278,7 @@ class question {
 };
 
 //initialize game board
-currentGameBoard = new gameBoard(allQuestions.categories, allQuestions.questions);
+currentGameBoard = new gameBoard(testBoardLayout.categories, testBoardLayout.questions);
 
 
 function importQuestions() {
@@ -283,6 +290,7 @@ function importQuestions() {
     const questionsArray = JSON.parse(questionsData);
     return questionsArray;
 }
+
 function startWebcamStream(player){
 
     // start and rebroadcast webcam stream
@@ -415,7 +423,8 @@ io.on('connection', (socket) => {
             currentGameState.buzzerActive = false;
             if (buzzerArray.length === 0) {
                 console.log('Buzzer timeout - no one buzzed in');
-                socket.emit('buzzerTimeout');
+                socket.broadcast.emit('buzzerTimeout');
+                socket.broadcast.emit('playSound', `${baseUrl}/audio/buzzerTimeout.mp3`);
             }
         }, 5000);
         
@@ -527,6 +536,12 @@ io.on('connection', (socket) => {
         
         // Emit back to confirm question selection
         socket.emit('questionSelected', questionData);
+        console.log('playing daily double sound')
+        if(question.dailyDouble){
+            socket.broadcast.emit('playSound', `${baseUrl}/audio/dailyDouble.mp3`);
+        } else {
+            console.log('No daily double');
+        }
         console.log(currentGameState);
 
     });
@@ -547,6 +562,7 @@ io.on('connection', (socket) => {
             player.modifyScore(value);
             currentGameState.lastCorrectPlayer = data.playerId;
             console.log(`Player ${player.name} answered correctly. New score: ${player.score}`);
+            socket.broadcast.emit('playSound', `${baseUrl}/audio/ding.mp3`);
             
             // Clear buzzer state after correct answer
             currentGameState.buzzerActive = false;
@@ -569,6 +585,7 @@ io.on('connection', (socket) => {
             // Subtract the question value from the player's score
             player.modifyScore(-value);
             console.log(`Player ${player.name} answered incorrectly. New score: ${player.score}`);
+            socket.broadcast.emit('playSound', `${baseUrl}/audio/buzzerTimeout.mp3`);
             
             // Re-enable the buzzer for other players to buzz in
             currentGameState.buzzerActive = true;
@@ -587,7 +604,8 @@ io.on('connection', (socket) => {
                 if (buzzerArray.length === 0) {
                     currentGameState.buzzerActive = false;
                     console.log('Buzzer timeout after incorrect answer - no one buzzed in');
-                    socket.emit('buzzerTimeout');
+                    socket.broadcast.emit('buzzerTimeout');
+                    socket.broadcast.emit('playSound', `${baseUrl}/audio/buzzerTimeout.mp3`);
                 }
             }, 5000);
             
@@ -625,6 +643,7 @@ io.on('connection', (socket) => {
         
         // Emit back to confirm the question was cleared
         socket.emit('questionCleared');
+
     });
     socket.on('questionFade', (data) => {
         console.log('Fading question...');
@@ -653,6 +672,7 @@ io.on('connection', (socket) => {
     socket.on('reveal-final-jeopardy-question', () => {
         currentGameState.finalJeopardyRevealed = true;
         io.emit('final-jeopardy-question-revealed', { question: currentGameState.finalJeopardyQuestion });
+        socket.broadcast.emit('playSound', `${baseUrl}/audio/finalJeopardy.mp3`);
         console.log('Final Jeopardy question revealed.');
     });
 
@@ -671,6 +691,8 @@ io.on('connection', (socket) => {
         currentGameState.finalJeopardyTimerId = timerInterval;
         io.emit('final-jeopardy-timer-started', { timer: currentGameState.finalJeopardyTimer });
         console.log('Final Jeopardy timer started.');
+        socket.broadcast.emit('playSound', `${baseUrl}/audio/themeSong.mp3`);
+        console.log('playing final jeopardy sound')
     });
 
     socket.on('finalJeopardyTimerTick', () => {

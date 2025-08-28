@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import PlayerView from './PlayerView';
 import AdminView from './AdminView';
 import DrawingBoard from './drawing';
+import AudioManager from './audiomanager';
 import './App.css';
 
 const HomePage = () => {
@@ -142,6 +143,7 @@ function App() {
 
   return (
     <SocketContext.Provider value={socket}>
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -150,6 +152,7 @@ function App() {
           <Route path="/drawing" element={<DrawingBoard/>}/>
         </Routes>
       </BrowserRouter>
+      <AudioManager />
     </SocketContext.Provider>
   );
 }

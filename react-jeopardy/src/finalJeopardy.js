@@ -4,6 +4,7 @@ import './finalJeopardy.css';
 import DrawingBoard from './drawing';
 import PodiumContainer from './podium';
 
+
 export function FinalJeopardy({ gameState, player, isAdmin }) {
     const socket = useContext(SocketContext);
     const [wager, setWager] = useState('');
@@ -90,11 +91,13 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                         <h2>Answer Spotlight</h2>
                         <h3>{gameState.players.find(p => p.id === gameState.finalJeopardySpotlight)?.name}</h3>
                         <img src={gameState.finalJeopardyAnswers[gameState.finalJeopardySpotlight]} alt="Final Jeopardy Answer" />
+                        
                     </div>
                 );
             }
             if (!gameState.finalJeopardyRevealed) {
                 return (
+                    <div>
                     <form onSubmit={handleWagerSubmit} className="final-jeopardy-form">
                         <h1 className="final-jeopardy-category">{gameState.finalJeopardyCategory}</h1>
                         <label>
@@ -103,6 +106,8 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                         </label>
                         <button type="submit">Submit Wager</button>
                     </form>
+                    
+                    </div>
                 );
             }
 
@@ -117,6 +122,7 @@ export function FinalJeopardy({ gameState, player, isAdmin }) {
                             What is...
                         </label>
                         <DrawingBoard onSubmit={handleDrawingSubmit} />
+                        
                     </div>
                 );
             }
