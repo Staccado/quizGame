@@ -10,6 +10,9 @@ import PlayerView from './PlayerView';
 import AdminView from './AdminView';
 import DrawingBoard from './drawing';
 import AudioManager from './audiomanager';
+import { LiveKitProvider } from './LiveKitContext';
+import { startWebcam, stopWebcam } from './webcam.js';
+import { Room } from 'livekit-client';
 import './App.css';
 
 const HomePage = () => {
@@ -20,6 +23,23 @@ const HomePage = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || 'Your Name');
+  const [videoTrack, setVideoTrack] = useState(null);
+  const [webcamActive, setWebcamActive] = useState(false);
+  const [room, setRoom] = useState(null);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    socket.emit('requestVideoToken', { playerName });
+
+    socket.on('videoTokenGenerated', (data) => {
+      console.log('Received token data:', data);
+      setToken(data.token);
+    });
+
+    return () => {
+      socket.off('videoTokenGenerated');
+    };
+  }, [socket, playerName]);
 
   // Add useEffect to emit playerName when it changes
   useEffect(() => {
@@ -51,6 +71,11 @@ const HomePage = () => {
   }
 
   const handleConfirm = () => {
+    if (webcamActive) {
+      socket.emit('setWebcam', true);
+      setIsSaved(true);
+      return;
+    }
     if (!previewUrl) return;
     fetch(previewUrl)
       .then(res => res.blob())
@@ -60,6 +85,7 @@ const HomePage = () => {
           const base64data = reader.result;
           const data = base64data.split(',')[1];
           socket.emit('uploadImage', { name: 'croppedImage.jpeg', data });
+          socket.emit('setWebcam', false);
           setIsSaved(true);
         };
         reader.readAsDataURL(blob);
@@ -71,6 +97,11 @@ const HomePage = () => {
       const file = e.target.files[0];
       let imageDataUrl = await readFile(file);
       setImageSrc(imageDataUrl);
+      setWebcamActive(false);
+      if (room) {
+        stopWebcam(room);
+      }
+      setVideoTrack(null);
     }
   };
 
@@ -88,6 +119,29 @@ const HomePage = () => {
     };
   }, [socket]);
 
+  const handleStartWebcam = async () => {
+    if (!token) {
+      console.error('No token available to start webcam');
+      return;
+    }
+    const newRoom = new Room();
+    setRoom(newRoom);
+    await newRoom.connect('ws://localhost:7880', token);
+    const track = await startWebcam(newRoom);
+    setVideoTrack(track);
+    setWebcamActive(true);
+    setImageSrc(null);
+    setPreviewUrl(null);
+  };
+
+  const handleStopWebcam = () => {
+    if (room) {
+      stopWebcam(room);
+    }
+    setVideoTrack(null);
+    setWebcamActive(false);
+  };
+
   return (
     <div className='home-nav'>
       <h1>Welcome to Jeopardy!</h1>
@@ -98,6 +152,10 @@ const HomePage = () => {
       <div>
         <label htmlFor="playerImageInput">Choose Profile Image:</label>
         <input id="playerImageInput" type="file" onChange={onFileChange} accept="image/*" />
+      </div>
+      <div>
+        <button onClick={handleStartWebcam} disabled={!token}>Start Webcam</button>
+        <button onClick={handleStopWebcam}>Stop Webcam</button>
       </div>
       {imageSrc && (
         <div>
@@ -111,13 +169,14 @@ const HomePage = () => {
           </ReactCrop>
         </div>
       )}
-      {previewUrl &&
+      {(previewUrl || webcamActive) &&
         <div className="podium-preview-container">
           <h3>Podium Preview:</h3>
           <JeopardyPodium 
             playerImage={previewUrl} 
             name={playerName}
             score={12345}
+            videoTrack={videoTrack}
           />
           <button onClick={handleConfirm}>Confirm</button>
           {isSaved && <p>Saved!</p>}
@@ -143,6 +202,7 @@ function App() {
 
   return (
     <SocketContext.Provider value={socket}>
+      <LiveKitProvider>
       
       <BrowserRouter>
         <Routes>
@@ -153,6 +213,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <AudioManager />
+      </LiveKitProvider>
     </SocketContext.Provider>
   );
 }

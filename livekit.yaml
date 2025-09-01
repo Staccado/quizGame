@@ -1,0 +1,20 @@
+# The port for the LiveKit API and WebSocket connection
+port: 7880
+
+# Configuration for WebRTC connections
+rtc:
+  tcp_port: 7880
+  # The UDP port range for media streams
+  port_range_start: 50000
+  port_range_end: 50100
+  # For local development, this should be false
+  use_external_ip: false
+
+# Your API Key and Secret. You can use these for local dev.
+keys:
+  # Replace with your own if you want, but these will work fine.
+  APXXXXXXXXXXXXXXXX: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+# Logging configuration
+logging:
+  level: info

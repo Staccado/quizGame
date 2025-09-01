@@ -1,3 +1,6 @@
+require('dotenv').config();
+const livekitApiKey = process.env.LIVEKIT_API_KEY;
+const livekitApiSecret = process.env.LIVEKIT_API_SECRET;
 const express = require('express'); //test
 const http = require('http');
 const socketio = require('socket.io');
@@ -6,6 +9,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const playerImagesDir = path.join(__dirname, 'playerimages');
+const { AccessToken } = require('livekit-server-sdk');
 if (!fs.existsSync(playerImagesDir)) {
     fs.mkdirSync(playerImagesDir);
 }
@@ -152,6 +156,32 @@ testBoardLayout = [
 
 
 
+  function generateLiveKitToken(player) {
+    if (!livekitApiKey || !livekitApiSecret) {
+        console.error("LiveKit API key or secret is not set. Check your .env file.");
+        return null;
+    }
+    
+    // Create a new AccessToken
+    const at = new AccessToken(livekitApiKey, livekitApiSecret, {
+        // The identity MUST be the player's unique ID from your game state
+        identity: player.id,
+        name: player.name
+    });
+
+    // Define the permissions for this user
+    at.addGrant({
+        room: 'jeopardy-game-room', // A static name for your game room
+        roomJoin: true,
+        canPublish: true,
+        canSubscribe: true,
+    });
+
+    // Return the signed JWT token string
+    return at.toJwt();
+}
+  
+
 // Configure CORS for Socket.IO
 const io = socketio(server, {
     cors: {
@@ -274,7 +304,7 @@ class question {
         this.question = question;
         this.answer = answer;
         this.value = value;
-    }
+    }   
 };
 
 //initialize game board
@@ -303,12 +333,11 @@ io.on('connection', (socket) => {
     let playerImage = socket.handshake.query.image || null;
     let playerWebcam = socket.handshake.query.webcam || null;
     
-    // Listen for player data from client
     socket.on('playerData', (data) => {
         playerName = data.name;
         playerid = socket.id;
         playerImage = data.image || null;
-        playerWebcam = data.webcam || null;
+        playerWebcam = data.webcam || null; // You can still use this to know if the player intends to use a webcam
 
         if (playerName === 'ReactAdmin' || playerName === 'ADMIN') {
             console.log('Admin connected');
@@ -316,28 +345,48 @@ io.on('connection', (socket) => {
         }
 
         const reconnectedPlayer = currentGameState.reconnectPlayer(playerName, playerid);
-
         if (reconnectedPlayer) {
-            // Don't overwrite the player's original image during reconnection
-            // The playerImage from client might be wrong due to localStorage sharing
             console.log(`Player ${reconnectedPlayer.name} reconnected with new ID: ${playerid}`);
-            
-            // If the reconnected player doesn't have an image, use the one from client
             if (!reconnectedPlayer.playerImage && playerImage) {
                 reconnectedPlayer.playerImage = playerImage;
-                console.log(`Assigned image to reconnected player ${reconnectedPlayer.name}`);
             }
         } else {
             const existingPlayer = currentGameState.getPlayerById(playerid);
             if (!existingPlayer) {
                 const newPlayerObject = new player(playerName, playerid, playerImage, playerWebcam);
+                
+                // --- MODIFIED: Update the player object ---
+                // Let's set a flag indicating the player has a webcam
+                if (playerWebcam) {
+                    newPlayerObject.webcamStream = true; 
+                }
+
                 currentGameState.addPlayer(newPlayerObject);
                 console.log(`Player ${playerName} joined with ID: ${playerid}`);
             }
         }
 
-        if (playerWebcam) {
-            startWebcamStream(playerid);
+        // --- REMOVED the call to startWebcamStream here ---
+        // The client will now request the token when it's ready.
+    });
+
+
+    // --- NEW CODE: Add a listener for when the client is ready for video ---
+    socket.on('requestVideoToken', ({ playerName }) => {
+        let player = currentGameState.getPlayerById(socket.id);
+        
+        if (!player) {
+            player = { id: playerName, name: playerName || '__TEMP_USER__' };
+        }
+
+        console.log(`Generating video token for player: ${player.name} (${player.id})`);
+        const token = generateLiveKitToken(player);
+
+        if (token) {
+            // Send the token back to ONLY the requesting client
+            socket.emit('videoTokenGenerated', { token });
+        } else {
+            console.error(`Failed to generate token for ${player.name}`);
         }
     });
 
