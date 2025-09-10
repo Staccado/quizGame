@@ -27,7 +27,7 @@ testBoardLayout = [
     {
       "categoryName": "Test",
       "questions": [
-        { "value": 200, "answered": false, "question": "What is the capital of France?", "answer": "Paris", "dailyDouble": true },
+        { "value": 200, "answered": false, "question": "What is the capital of this drawing board?", "answer": "Paris", "dailyDouble": false, "drawingBoard": true },
         { "value": 400, "answered": false, "question": "What is the capital of Germany?", "answer": "Berlin", "dailyDouble":true },
         { "value": 600, "answered": false, "question": "What is the capital of Italy?", "answer": "Rome" },
         { "value": 800, "answered": false, "question": "What is the capital of Spain?", "answer": "Madrid" },
@@ -196,6 +196,7 @@ class gameState {
             player: null,
 
         }
+        this.pictionaryImage = null;
 
     }
 
@@ -393,6 +394,8 @@ io.on('connection', (socket) => {
     });
 
 
+
+
     socket.on('buzzerActive', (data) => {
         // Clear previous buzzer array
         buzzerArray = [];
@@ -525,6 +528,9 @@ io.on('connection', (socket) => {
         currentGameState.questionText = question.question;
         currentGameState.questionImage = question.image;
         currentGameState.dailyDouble = question.dailyDouble;
+        currentGameState.drawingBoard = question.drawingBoard;
+        currentGameState.pictionaryImageUrl = null;
+        currentGameState.pictionarySubmittedBy = null;
 
         if (question.dailyDouble) {
             currentGameState.dailyDoublePlayer = currentGameState.lastCorrectPlayer;
@@ -723,17 +729,9 @@ io.on('connection', (socket) => {
         }
     
         console.log('Received drawing data from:', player.name);
-    
-        // --- CHANGE 2: Simplified the assignment ---
-        // Since 'data' is already the string we need, we assign it directly.
         const drawingString = data;
-    
-        // 2. Split the string to get only the base64 part.
-        // This part is correct and doesn't need to change.
         const base64Data = drawingString.split(',')[1];
-        
-        // Check if splitting worked, in case the prefix was missing.
-        if (!base64Data) {
+                if (!base64Data) {
             console.error('Could not extract base64 data from string.');
             return;
         }
@@ -763,6 +761,68 @@ io.on('connection', (socket) => {
             });
         });
     });
+
+    socket.on('pictionaryImageSubmitted', (payload) => {
+        console.log('Pictionary image received');
+        const player = currentGameState.getPlayerById(socket.id);
+
+        if (!player) {
+            console.error('Unable to resolve player for socket', socket.id);
+            return;
+        }
+
+        let base64Data;
+        let extension = 'png';
+
+        // Accept either a data URL string or an object with a `data` field
+        if (typeof payload === 'string') {
+            const match = payload.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
+            if (!match) {
+                console.error('Invalid data URL format for pictionary image.');
+                return;
+            }
+            const format = match[1];
+            extension = format === 'jpeg' ? 'jpg' : format;
+            base64Data = match[2];
+        } else if (payload && typeof payload.data === 'string') {
+            base64Data = payload.data;
+            if (payload.extension) {
+                extension = payload.extension;
+            }
+        } else {
+            console.error('Unexpected pictionary payload shape:', payload);
+            return;
+        }
+
+        const uniquePrefix = 'pictionaryImage-' + Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = `${uniquePrefix}-${player.name}.${extension}`;
+        const filePath = path.join(playerImagesDir, fileName);
+
+        try {
+            const buffer = Buffer.from(base64Data, 'base64');
+            fs.writeFile(filePath, buffer, (err) => {
+                if (err) {
+                    console.error('Error saving pictionary image:', err);
+                    return;
+                }
+                const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+                console.log('Pictionary image saved for', player.name, '->', imageUrl);
+
+                // Update game state with the image URL
+                currentGameState.pictionaryImageUrl = imageUrl;
+                currentGameState.pictionarySubmittedBy = player.id;
+            });
+        } catch (e) {
+            console.error('Failed to process pictionary image buffer:', e);
+        }
+    });
+
+
+
+
+
+
+    //
 
     socket.on('final-jeopardy-ruling', (data) => {
         const player = currentGameState.getPlayerById(data.playerId);
@@ -861,7 +921,10 @@ setInterval(() => {
         finalJeopardyTimer: currentGameState.finalJeopardyTimer,
         playerShowcase: currentGameState.playerShowcase,
         finalJeopardyWagers: currentGameState.finalJeopardyWagers,
-        finalJeopardyAnswers: currentGameState.finalJeopardyAnswers
+        finalJeopardyAnswers: currentGameState.finalJeopardyAnswers,
+        drawingBoard: currentGameState.drawingBoard,
+        pictionaryImageUrl: currentGameState.pictionaryImageUrl,
+        pictionarySubmittedBy: currentGameState.pictionarySubmittedBy
 
     };
    // console.log(cleanGameState);

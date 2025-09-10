@@ -9,11 +9,12 @@ function QuestionScreen({ gameState }) {
     const socket = useContext(SocketContext);
     const [isQuestionVisible, setIsQuestionVisible] = useState(false);
 
-    const { questionActive, dailyDouble, questionText, questionImage, wagerAmount, players, dailyDoublePlayer: dailyDoublePlayerId } = gameState;
+    const { questionActive, dailyDouble, questionText, questionImage, wagerAmount, players, dailyDoublePlayer: dailyDoublePlayerId, drawingBoard, lastCorrectPlayer, pictionaryImageUrl, pictionarySubmittedBy } = gameState;
 
     useEffect(() => {
         const handleShowQuestion = () => {
             setIsQuestionVisible(true);
+            console.log('Show question triggered');
         };
 
         socket.on('showQuestion', handleShowQuestion);
@@ -42,15 +43,45 @@ function QuestionScreen({ gameState }) {
         return null; // Don't render anything if no question is active
     }
 
+    // Determine what content to render based on game state
+    let contentToRender = null;
+
+    if (dailyDouble && !isQuestionVisible) {
+        // Show Daily Double intro screen and do not overwrite with other content
+        contentToRender = <DailyDoubleIntro wagerAmount={wagerAmount} />;
+    } else if (isQuestionVisible && drawingBoard) {
+        // Show the question with drawing board enabled
+        contentToRender = (
+            <QuestionDisplay
+                questionText={questionText}
+                questionImage={questionImage}
+                drawingBoard={drawingBoard}
+                lastCorrectPlayer={lastCorrectPlayer}
+                pictionaryImageUrl={pictionaryImageUrl}
+                pictionarySubmittedBy={pictionarySubmittedBy}
+            />
+        );
+    } else if (isQuestionVisible) {
+        // Show the standard question content
+        contentToRender = (
+            <QuestionDisplay
+                questionText={questionText}
+                questionImage={questionImage}
+                drawingBoard={drawingBoard}
+                lastCorrectPlayer={lastCorrectPlayer}
+                pictionaryImageUrl={pictionaryImageUrl}
+                pictionarySubmittedBy={pictionarySubmittedBy}
+            />
+        );
+    }
+    // Future conditions can be added here, for example:
+    // else if (drawingBoard) {
+    //     contentToRender = <DrawingBoard />;
+    // }
+
     return (
         <div className={`question-screen ${dailyDouble ? 'daily-double' : 'regular-question'} ${questionActive ? 'active' : ''}`}>
-            {dailyDouble && !isQuestionVisible && (
-                <DailyDoubleIntro wagerAmount={wagerAmount} />
-            )}
-
-            {isQuestionVisible && (
-                <QuestionDisplay questionText={questionText} questionImage={questionImage} />
-            )}
+            {contentToRender}
 
             {dailyDouble && dailyDoublePlayer && (
                 <JeopardyPodium
