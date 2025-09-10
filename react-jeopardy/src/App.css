@@ -194,3 +194,11 @@ body {
 .board-area-container {
   position: relative;
 }
+.showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transform: scale(2.0);
+}

@@ -46,10 +46,10 @@ const PlayerView = () => {
         setGameState(newGameState);
         const currentPlayer = newGameState.players.find(p => p.id === socket.id);
         setPlayer(currentPlayer);
-
     });
-    //socket.on('question', setQuestion);
+
     socket.on('disconnect', () => console.log('Player disconnected.'));
+
 
     return () => {
         socket.off('connect', handleConnect);
@@ -57,6 +57,18 @@ const PlayerView = () => {
         socket.off('disconnect');
     };
   }, [socket]);
+
+  useEffect(() => {
+    socket.on('buzzerWinner', (buzzerWinner) => {
+     // console.log('Buzzer winner from the player view.js ', buzzerWinner);
+    });
+
+    return () => {
+      socket.off('buzzerWinner');
+    };
+  }, [socket]);
+
+
   
   if (!gameState) {
     return (
@@ -69,7 +81,7 @@ const PlayerView = () => {
   if (gameState.playerShowcase.active) {
     const showcasedPlayer = gameState.players.find(p => p.id === gameState.finalJeopardySpotlight);
     return (
-      <div className="App">
+      <div className="showcase">
         <h1>Player Showcase</h1>
         {showcasedPlayer && <h2>{showcasedPlayer.name}</h2>}
         <JeopardyPodium
@@ -77,7 +89,7 @@ const PlayerView = () => {
                     score={showcasedPlayer.score}
                     playerImage={showcasedPlayer.playerImage}
                     hasWebcam={showcasedPlayer.webcamStream}
-                    className="daily-double-podium"
+                    className="daily-double-podium2"
                 />
       </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { SocketContext } from './SocketContext';
 import './podium.css';
+import BuzzerBar from './BuzzerBar';
 
 /**
  * JeopardyPodium
@@ -45,6 +46,7 @@ export function JeopardyPodium({ name = 'Player', score = 0, playerImage = '', h
 
   return (
     <div
+      id={`podium-${name}`}
       className={`jeopardy-podium ${className}`}
       role="group"
       aria-label={`${name ?? 'Player'} podium`}
@@ -52,12 +54,14 @@ export function JeopardyPodium({ name = 'Player', score = 0, playerImage = '', h
       <div className="podium-media-area">
         {renderMediaContent()}
       </div>
+        <BuzzerBar totalBoxes={7} playerName={name} />
 
       <div className="podium-score-area">
         <p className={`podium-score ${scoreColorClass}`}>{safeScore.toLocaleString()}</p>
       </div>
 
       <div className="podium-name-area">
+        
         <p className="podium-name">{name ?? '—'}</p>
       </div>
 
@@ -65,6 +69,12 @@ export function JeopardyPodium({ name = 'Player', score = 0, playerImage = '', h
     </div>
   );
 }
+
+const handleBuzzerWinner = (buzzerWinner) => {
+ // console.log('Buzzer winner from the podium.js: ', buzzerWinner);
+  
+};
+
 
 const PodiumContainer = ({ spotlightPlayerId }) => {
   const socket = useContext(SocketContext);
@@ -76,6 +86,7 @@ const PodiumContainer = ({ spotlightPlayerId }) => {
     };
 
     socket.on('gameTick', handleGameTick);
+    socket.on('buzzerWinner', handleBuzzerWinner);
 
     socket.emit('getGameState');
 

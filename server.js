@@ -438,6 +438,7 @@ io.on('connection', (socket) => {
         
         // Find the player who pressed the buzzer
         const player = currentGameState.getPlayerById(data.playerId);
+
         if (player && currentGameState.buzzerActive) {
             console.log(`Player ${player.name} buzzed in with reaction time: ${data.reactionTime}ms`);
         }
@@ -458,7 +459,9 @@ io.on('connection', (socket) => {
                 currentGameState.highlightedPlayer = buzzerWinner.playerId; // auto select the winner to allow answer/points
                 currentGameState.currentActivePlayer = buzzerWinner.playerId;
                 console.log(`Winner: ${buzzerWinner.playerId} with reaction time: ${buzzerWinner.reactionTime}ms`);
-                console.log(currentGameState);
+
+                io.emit('buzzerWinner', currentGameState.buzzerPlayer);
+
             }
             previousBuzzerArray = buzzerArray;
             buzzerArray = [];
@@ -672,7 +675,6 @@ io.on('connection', (socket) => {
     socket.on('reveal-final-jeopardy-question', () => {
         currentGameState.finalJeopardyRevealed = true;
         io.emit('final-jeopardy-question-revealed', { question: currentGameState.finalJeopardyQuestion });
-        socket.broadcast.emit('playSound', `${baseUrl}/audio/finalJeopardy.mp3`);
         console.log('Final Jeopardy question revealed.');
     });
 

@@ -10,11 +10,7 @@ const Buzzer = ({ gameState }) => {
 
     // Track when buzzer becomes active
     useEffect(() => {
-        console.log('Buzzer state changed:', {
-            buzzerActive: gameState?.buzzerActive,
-            buzzerPressed,
-            buzzerActivatedTime: !!buzzerActivatedTime
-        });
+
         
         if (gameState && gameState.buzzerActive && !buzzerActivatedTime) {
             setBuzzerActivatedTime(Date.now());
