@@ -120,23 +120,18 @@ const PlayerView = () => {
         <div>
         
 
-            <DragMove 
-              onDragMove={handleDragMove}
-              onPointerDown={() => {}}
-              onPointerUp={() => {}}
-              onPointerMove={() => {}}
-            >
-              <div style={{ 
-                transform: `translate(${translate.x}px, ${translate.y}px)`,
-                position: 'fixed',
-                zIndex: 9999,
-                pointerEvents: 'auto'
-              }}>
-                <img src={hat} alt="hat" />
+          <DragMove 
+            onDragMove={handleDragMove}
+            onPointerDown={() => {}}
+            onPointerUp={() => {}}
+            onPointerMove={() => {}}
+          >
+            <div style={{ transform: `translate(${translate.x}px, ${translate.y}px)` , position: 'fixed', zIndex: 9999, pointerEvents: 'auto' }}>
+              <img src={hat} alt="hat" />
 
-              </div>
+            </div>
 
-              
+          
         
         <div className="board-area-container">
           <Profiler id="BoardProfiler" onRender={profilerCallback}>
@@ -148,7 +143,6 @@ const PlayerView = () => {
         <Buzzer gameState={gameState} />
         </DragMove>
         </div>
-        
       </div>
     );
   }
