@@ -223,12 +223,35 @@ class gameState {
     }
 
     reconnectPlayer(name, newId) {
-        const player = this.players.find(p => p.name === name && !p.isConnected);
-        if (player) {
-            player.id = newId;
-            player.isConnected = true;
-            return player;
+        // Find a disconnected player with this exact name
+        const disconnectedPlayer = this.players.find(p => p.name === name && !p.isConnected);
+        
+        if (disconnectedPlayer) {
+            console.log(`Found disconnected player "${name}" with old ID: ${disconnectedPlayer.id}, attempting reconnection with new ID: ${newId}`);
+            
+            // Check if there's already a connected player with this name and a different socket ID
+            // (excluding the disconnected player we found, which has the old socket ID)
+            const connectedPlayerWithSameName = this.players.find(p => 
+                p.name === name && 
+                p.isConnected && 
+                p.id !== newId && 
+                p.id !== disconnectedPlayer.id
+            );
+            
+            if (connectedPlayerWithSameName) {
+                // There's already a connected player with this name, so this is a name conflict
+                console.log(`Reconnection blocked: Player "${name}" is already connected with ID: ${connectedPlayerWithSameName.id}`);
+                return null;
+            }
+            
+            // Safe to reconnect - update the disconnected player's ID and connection status
+            console.log(`Reconnecting player "${name}" from ID ${disconnectedPlayer.id} to ${newId}`);
+            disconnectedPlayer.id = newId;
+            disconnectedPlayer.isConnected = true;
+            return disconnectedPlayer;
         }
+        
+        console.log(`No disconnected player found with name "${name}" for reconnection`);
         return null;
     }
 
@@ -311,6 +334,8 @@ io.on('connection', (socket) => {
         playerImage = data.image || null;
         playerWebcam = data.webcam || null;
 
+        console.log(`Received playerData from socket ${playerid}:`, { name: playerName, hasImage: !!playerImage });
+
         if (playerName === 'ReactAdmin' || playerName === 'ADMIN') {
             console.log('Admin connected');
             return;
@@ -331,9 +356,40 @@ io.on('connection', (socket) => {
         } else {
             const existingPlayer = currentGameState.getPlayerById(playerid);
             if (!existingPlayer) {
+                // Check if another connected player already has this name
+                const nameConflict = currentGameState.players.find(p => p.name === playerName && p.isConnected && p.id !== playerid);
+                if (nameConflict) {
+                    console.log(`Name conflict: Player ${playerName} is already connected. Assigning unique name.`);
+                    // Assign a unique name by appending a number
+                    let uniqueName = playerName;
+                    let counter = 1;
+                    while (currentGameState.players.find(p => p.name === uniqueName && p.isConnected)) {
+                        uniqueName = `${playerName}${counter}`;
+                        counter++;
+                    }
+                    playerName = uniqueName;
+                    console.log(`Assigned unique name: ${playerName}`);
+                }
+                
                 const newPlayerObject = new player(playerName, playerid, playerImage, playerWebcam);
                 currentGameState.addPlayer(newPlayerObject);
                 console.log(`Player ${playerName} joined with ID: ${playerid}`);
+            } else {
+                // Update existing player's data (name, image, etc.)
+                if (playerName !== existingPlayer.name) {
+                    // Check for name conflicts before updating
+                    const nameConflict = currentGameState.players.find(p => p.name === playerName && p.isConnected && p.id !== playerid);
+                    if (nameConflict) {
+                        console.log(`Name conflict: Cannot update player name to "${playerName}" - already taken by another connected player`);
+                        return; // Don't update the name if it conflicts
+                    }
+                    console.log(`Updating player name from "${existingPlayer.name}" to "${playerName}"`);
+                    existingPlayer.name = playerName;
+                }
+                if (playerImage && playerImage !== existingPlayer.playerImage) {
+                    console.log(`Updating player image for ${existingPlayer.name}`);
+                    existingPlayer.playerImage = playerImage;
+                }
             }
         }
 
@@ -355,6 +411,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('uploadImage', (file) => {
+        console.log('Uploading image start ');
         const { name, data } = file;
         const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const fileName = `${uniquePrefix}-${name}`;
@@ -372,6 +429,11 @@ io.on('connection', (socket) => {
             const player = currentGameState.getPlayerById(socket.id);
             if (player) {
                 player.playerImage = imageUrl;
+                console.log(`Player ${player.name} image updated to: ${imageUrl} using the uploadImage function`);
+            }
+            else{
+                console.log('Player not found', socket.id);
+                console.log('list of players',currentGameState.players);
             }
             
             socket.emit('imageUploaded', { imageUrl });

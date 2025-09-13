@@ -20,41 +20,34 @@ const PlayerView = () => {
 
 
   useEffect(() => {
-    const playerName = localStorage.getItem('playerName') || 'ReactPlayer';
-    const playerImage = localStorage.getItem(`playerImage_${playerName}`);
-
-    const playerData = {
+    // Handle socket connection and player registration
+    socket.on('connect', () => {
+      console.log('Player socket connected, sending player data for reconnection');
+      
+      // Get player data from localStorage and send it immediately
+      const playerName = localStorage.getItem('playerName') || 'Anonymous Player';
+      const playerImage = localStorage.getItem('playerImage') || "react.png";
+      
+      const playerData = {
         name: playerName,
-        image: playerImage || "react.png",
+        image: playerImage,
         webcam: false
-    };
+      };
+      
+      console.log('Sending player data for reconnection:', playerData);
+      socket.emit('playerData', playerData);
+    });
 
-    socket.io.opts.query = playerData;
-
-    const handleConnect = () => {
-        console.log('Player connected to server!');
-        socket.emit('playerData', playerData);
-    };
-
-    if (socket.connected) {
-        handleConnect();
-    }
-
-    socket.on('connect', handleConnect);
-
+    // Listen for game state updates
     socket.on('gameTick', (newGameState) => {
         setGameState(newGameState);
         const currentPlayer = newGameState.players.find(p => p.id === socket.id);
         setPlayer(currentPlayer);
     });
 
-    socket.on('disconnect', () => console.log('Player disconnected.'));
-
-
     return () => {
-        socket.off('connect', handleConnect);
+        socket.off('connect');
         socket.off('gameTick');
-        socket.off('disconnect');
     };
   }, [socket]);
 
