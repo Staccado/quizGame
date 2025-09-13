@@ -4,6 +4,7 @@ const socketio = require('socket.io');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const cors = require('cors');
 const server = http.createServer(app);
 const playerImagesDir = path.join(__dirname, 'playerimages');
 if (!fs.existsSync(playerImagesDir)) {
@@ -19,7 +20,12 @@ app.use('/audio', (req, res, next) => {
     next();
   }, express.static(path.join(__dirname, 'audio')));
 
-const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://your-production-domain.com') : (process.env.SERVER_URL || 'http://localhost:3001');
+app.use(cors({
+	origin: "https://test2.chrismartel.com"
+}));
+
+
+const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://test3.chrismartel.com') : (process.env.SERVER_URL || 'https://test2.chrismartel.com');
 let buzzerArray = [];
 let previousBuzzerArray = [];
 
@@ -155,14 +161,14 @@ testBoardLayout = [
 // Configure CORS for Socket.IO
 const io = socketio(server, {
     cors: {
-        origin: "*", // In production, replace with your actual domain
+	    origin: "https://test2.chrismartel.com", // In production, replace with your actual domain
         methods: ["GET", "POST"]
     }
 });
 
 
-server.listen(3001, () => {
-    console.log('Server is running on port 3001');
+server.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });
 
 class gameState {

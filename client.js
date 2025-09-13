@@ -1,7 +1,7 @@
 let playerName = "testUsers";
 let playerImage = "testImage.jpg";
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+const SERVER_URL = process.env.SERVER_URL || 'https://jepordee.chrismartel.com';
 const socket = io(SERVER_URL, {
     query: {
         name: playerName,

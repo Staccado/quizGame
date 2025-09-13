@@ -22,7 +22,7 @@ const AudioManager = () => {
 
             audio.volume = volume;
             audio.play().catch(error => {
-                console.error("Audio playback error:", error);
+                console.error("Audio playback error:", error, 'the url was', soundURL);
             });
         };
 
