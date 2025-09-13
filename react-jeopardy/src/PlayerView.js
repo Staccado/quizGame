@@ -7,6 +7,12 @@ import PodiumContainer, { JeopardyPodium } from './podium';
 import QuestionScreen from './questionScreen';
 import { FinalJeopardy } from './finalJeopardy';
 
+import DragMove from './dragmove';
+import hat from './hat.png';
+
+
+
+
 import './App.css'; // We can reuse the main App styles
 
 const PlayerView = () => {
@@ -17,6 +23,18 @@ const PlayerView = () => {
   const profilerCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime, interactions) => {
     //console.log(`${id} phase: ${phase}, actual time: ${actualDuration}, base time: ${baseDuration}`);
   };
+  const [translate, setTranslate] = useState({
+    x: 0,
+    y: 0
+  });
+  const handleDragMove = (e) => {
+    setTranslate({
+      x: translate.x + e.movementX,
+      y: translate.y + e.movementY
+    });
+  };
+  
+
 
 
   useEffect(() => {
@@ -74,6 +92,9 @@ const PlayerView = () => {
   if (gameState.playerShowcase.active) {
     const showcasedPlayer = gameState.players.find(p => p.id === gameState.finalJeopardySpotlight);
     return (
+      
+
+
       <div className="showcase">
         <h1>Player Showcase</h1>
         {showcasedPlayer && <h2>{showcasedPlayer.name}</h2>}
@@ -96,6 +117,27 @@ const PlayerView = () => {
   } else {
     return (
       <div className="App">
+        <div>
+        
+
+            <DragMove 
+              onDragMove={handleDragMove}
+              onPointerDown={() => {}}
+              onPointerUp={() => {}}
+              onPointerMove={() => {}}
+            >
+              <div style={{ 
+                transform: `translate(${translate.x}px, ${translate.y}px)`,
+                position: 'fixed',
+                zIndex: 9999,
+                pointerEvents: 'auto'
+              }}>
+                <img src={hat} alt="hat" />
+
+              </div>
+
+              
+        
         <div className="board-area-container">
           <Profiler id="BoardProfiler" onRender={profilerCallback}>
             <Board boardData={gameState.board} isAdmin={false} />
@@ -104,6 +146,9 @@ const PlayerView = () => {
         </div>
         <PodiumContainer />
         <Buzzer gameState={gameState} />
+        </DragMove>
+        </div>
+        
       </div>
     );
   }
