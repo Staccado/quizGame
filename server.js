@@ -19,7 +19,7 @@ app.use('/audio', (req, res, next) => {
     next();
   }, express.static(path.join(__dirname, 'audio')));
 
-const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-production-domain.com' : 'http://localhost:3001';
+const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://your-production-domain.com') : (process.env.SERVER_URL || 'http://localhost:3001');
 let buzzerArray = [];
 let previousBuzzerArray = [];
 
@@ -423,7 +423,7 @@ io.on('connection', (socket) => {
                 console.error('Error saving image:', err);
                 return;
             }
-            const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+            const imageUrl = `${baseUrl}/playerimages/${fileName}`;
             
             // Update the player's image in the game state
             const player = currentGameState.getPlayerById(socket.id);
@@ -811,7 +811,7 @@ io.on('connection', (socket) => {
                 return;
             }
     
-            const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+            const imageUrl = `${baseUrl}/playerimages/${fileName}`;
             console.log(`Player ${player.name}'s answer saved at: ${imageUrl}`);
             
             currentGameState.finalJeopardyAnswers[player.id] = imageUrl;
@@ -867,7 +867,7 @@ io.on('connection', (socket) => {
                     console.error('Error saving pictionary image:', err);
                     return;
                 }
-                const imageUrl = `http://localhost:3001/playerimages/${fileName}`;
+                const imageUrl = `${baseUrl}/playerimages/${fileName}`;
                 console.log('Pictionary image saved for', player.name, '->', imageUrl);
 
                 // Update game state with the image URL

@@ -8,7 +8,9 @@
   "main": "server.js",
   "scripts": {
     "test": "console.log('test')",
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:local": "SERVER_URL=http://localhost:3000 node server.js",
+    "start:prod": "NODE_ENV=production PRODUCTION_URL=https://your-domain.com node server.js"
   },
   "dependencies": {
     "express": "^5.1.0",

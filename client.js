@@ -1,7 +1,8 @@
 let playerName = "testUsers";
 let playerImage = "testImage.jpg";
 
-const socket = io('http://localhost:3000', {
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+const socket = io(SERVER_URL, {
     query: {
         name: playerName,
         image: playerImage,

@@ -7,8 +7,9 @@ import AdminBuzzerStart from './adminBuzzerStart';
 import RightOrWrong from './rightOrWrong';
 import { FinalJeopardy } from './finalJeopardy';
 import './App.css';
+import config from './config';
 
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = config.SERVER_URL;
 
 const AdminView = () => {
   const socket = useContext(SocketContext);
