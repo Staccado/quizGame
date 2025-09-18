@@ -283,7 +283,7 @@ class player {
         this.isConnected = true;
         this.isReady = false;
         this.isEliminated = false;
-        this.hatsUnlocked = ["hat1", "hat2", "hat3", "hat4", "hat5", "hat6", "hat7", "hat8", "hat9", "hat10"];
+        this.hatsUnlocked = ["hat1"];
 };
 
  modifyScore(amount) {

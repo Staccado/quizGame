@@ -32,6 +32,29 @@ const PlayerView = () => {
     width: 100,
     height: 100
   });
+
+  // Tray / placement state
+  const [isHatsTrayOpen, setIsHatsTrayOpen] = useState(false);
+  const [placedHatName, setPlacedHatName] = useState('hat1');
+
+  // Helper to resolve hat asset by name; falls back to default `hat.png`
+  const getHatAsset = (hatName) => {
+    try {
+      // Try common locations; adjust if a dedicated folder exists
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      return require(`./hats/${hatName}.png`);
+    } catch (e1) {
+      try {
+        // Fallback to root if hats are placed alongside other images
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return require(`./${hatName}.png`);
+      } catch (e2) {
+        return hat;
+      }
+    }
+  };
+
+  const allHats = Array.from({ length: 10 }, (_, i) => `hat${i + 1}`);
   
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -84,6 +107,39 @@ const PlayerView = () => {
 
   const handleResizeEnd = () => {
     setIsResizing(false);
+  };
+
+  // Drag from tray -> drop on play area
+  const handleHatDragStart = (e, hatName, isUnlocked) => {
+    if (!isUnlocked) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('text/hat', hatName);
+    e.dataTransfer.effectAllowed = 'copyMove';
+  };
+
+  const handlePlayAreaDragOver = (e) => {
+    // Allow dropping
+    e.preventDefault();
+  };
+
+  const handlePlayAreaDrop = (e) => {
+    e.preventDefault();
+    const droppedHatName = e.dataTransfer.getData('text/hat');
+    if (!droppedHatName) return;
+
+    // Replace any existing hat with the new one
+    setPlacedHatName(droppedHatName);
+
+    // Position hat at drop location (center it roughly)
+    const boundingRect = e.currentTarget.getBoundingClientRect();
+    const dropX = e.clientX - boundingRect.left;
+    const dropY = e.clientY - boundingRect.top;
+    setTranslate({
+      x: Math.round(dropX - hatSize.width / 2),
+      y: Math.round(dropY - hatSize.height / 2),
+    });
   };
   
 
@@ -198,11 +254,96 @@ const PlayerView = () => {
 
     if (!gameState.winner) {
     return (
-      <div className="App">
+      <div
+        className="App"
+        onDragOver={handlePlayAreaDragOver}
+        onDrop={handlePlayAreaDrop}
+      >
         <div>
+          {/* Hats tray toggle */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: 0,
+              transform: 'translateY(-50%)',
+              zIndex: 10000,
+            }}
+          >
+            <div
+              onClick={() => setIsHatsTrayOpen(!isHatsTrayOpen)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') setIsHatsTrayOpen(!isHatsTrayOpen); }}
+              style={{
+                backgroundColor: '#1f2937',
+                color: 'white',
+                padding: '10px 12px',
+                borderTopRightRadius: 8,
+                borderBottomRightRadius: 8,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                fontWeight: 600,
+              }}
+            >
+              {isHatsTrayOpen ? 'Close Hats' : 'Hats'}
+            </div>
+
+            {isHatsTrayOpen && (
+              <div
+                style={{
+                  width: 220,
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                  backgroundColor: '#111827',
+                  padding: 12,
+                  borderTopRightRadius: 8,
+                  borderBottomRightRadius: 8,
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.35)',
+                  marginTop: 8,
+                }}
+              >
+                <div style={{ color: 'white', marginBottom: 8, fontWeight: 700 }}>Select a Hat</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {allHats.map((hatName) => {
+                    const isUnlocked = !!(player && player.hatsUnlocked && player.hatsUnlocked.includes(hatName));
+                    const imgSrc = getHatAsset(hatName);
+                    return (
+                      <div key={hatName} style={{ textAlign: 'center' }}>
+                        <img
+                          src={imgSrc}
+                          alt={hatName}
+                          draggable={isUnlocked}
+                          onDragStart={(e) => handleHatDragStart(e, hatName, isUnlocked)}
+                          onClick={() => {
+                            if (!isUnlocked) return;
+                            setPlacedHatName(hatName);
+                          }}
+                          style={{
+                            width: 72,
+                            height: 72,
+                            objectFit: 'contain',
+                            filter: isUnlocked ? 'none' : 'grayscale(100%)',
+                            opacity: isUnlocked ? 1 : 0.5,
+                            cursor: isUnlocked ? 'grab' : 'not-allowed',
+                            border: placedHatName === hatName ? '2px solid #10b981' : '2px solid transparent',
+                            borderRadius: 8,
+                            backgroundColor: placedHatName === hatName ? 'rgba(16,185,129,0.1)' : 'transparent',
+                          }}
+                        />
+                        <div style={{ color: '#e5e7eb', fontSize: 12, marginTop: 4 }}>{hatName}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         
        
 
+          {placedHatName && (
           <DragMove 
             onDragMove={handleDragMove}
             onPointerDown={handlePointerDown}
@@ -227,7 +368,7 @@ const PlayerView = () => {
                 className="hat-container"
               >
                 <img 
-                  src={hat} 
+                  src={getHatAsset(placedHatName)} 
                   alt="hat" 
                   draggable={false}
                   style={{
@@ -259,6 +400,7 @@ const PlayerView = () => {
               </div>
             </div>
             </DragMove>
+          )}
 
         
         
