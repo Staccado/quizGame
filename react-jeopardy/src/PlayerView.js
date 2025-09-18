@@ -9,10 +9,6 @@ import { FinalJeopardy } from './finalJeopardy';
 
 import DragMove from './dragmove';
 import hat from './hat.png';
-
-
-
-
 import './App.css'; // We can reuse the main App styles
 
 const PlayerView = () => {
@@ -142,6 +138,24 @@ const PlayerView = () => {
     });
   };
   
+  let answeredQuestions = {  // object for each player with an array of answered questions.
+
+    Chris:[{
+      category: 'History',
+      values: [200, 400, 600, 800, 1000],
+    }],
+
+    Test2:[{
+      category: 'History',
+      values: [200, 400, 600, 800, 1000],
+
+    }
+    {category: 'Geography',
+      values: [200, 400, 600, 800, 1000],
+    }
+  
+  ]
+  }
 
 
 

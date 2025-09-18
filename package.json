@@ -13,9 +13,11 @@
     "start:prod": "NODE_ENV=production PRODUCTION_URL=https://your-domain.com node server.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "http": "^0.0.1-security",
     "livekit-client": "^2.15.6",
+    "mysql2": "^3.15.0",
     "path": "^0.12.7",
     "react-canvas-draw": "^1.2.1",
     "socket.io": "^4.8.1"

@@ -7,6 +7,18 @@ const app = express();
 const cors = require('cors');
 const server = http.createServer(app);
 const playerImagesDir = path.join(__dirname, 'playerimages');
+const mysql = require('mysql2/promise');
+const e = require('express');
+require('dotenv').config();
+//database connection info
+
+const pool = new mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
 if (!fs.existsSync(playerImagesDir)) {
     fs.mkdirSync(playerImagesDir);
 }
@@ -26,6 +38,16 @@ app.use(cors({
 	]
 }));
 
+
+//Database schema 
+//+CREATE TABLE players (
+//+    ID INT PRIMARY KEY AUTO_INCREMENT,
+//+    Name VARCHAR(255),
+//+    Total_Winnings INT,
+//+    Consecutive_Wins INT,
+//+    Achievements_Unlocked JSON
+//+);
+//+
 
 const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://test3.chrismartel.com') : (process.env.SERVER_URL || 'https://quiz.chrismartel.com');
 let buzzerArray = [];
@@ -168,6 +190,93 @@ const io = socketio(server, {
     }
 });
 
+const achievmentList = {
+
+    broke_boy: {
+        hat: `hat3`,
+        condition: ({player}) => player.score < 0
+    },
+    trueDailyDouble: {
+        hat: `hat4`,
+        condition: ({player}) => player.score === currentGameState.wagerAmount || player.score === '2000' && player.score < '2000'
+    },
+
+    categorySweeper:{
+        hat: `hat5`,
+        condition: ({player}) => checkCategoryCompletion({player})
+            
+        }
+    }
+
+const requiredValues1 = [200, 400, 600, 800, 1000] ;
+const requiredValues2 =[400, 800, 1200, 1600, 2000];
+
+
+function checkCategoryCompletion({ player }) {
+
+    for(const category in answeredQuestions[player.name]){
+    const answeredValues = answeredQuestions[player.name][category];
+    console.log('checking category completion for', category);
+
+    // Check if answered values match either of the required sets
+    if (areArraysEqual(answeredValues, requiredValues1) || areArraysEqual(answeredValues, requiredValues2)) {
+        return true;
+        console.log('category completion for', category, 'is true');
+    } else {
+        console.log('this is the player values', answeredValues);
+        console.log('this is array 1', requiredValues1);
+        console.log('this is array 2', requiredValues2);
+        return false;
+    }
+} }
+
+
+let answeredQuestions = {
+  // A single object mapping player names to their answered questions
+  'Chris': {
+    // An object mapping category names to their answered values
+    'History': [200, 400, 600, 800, 1000],
+    'Geography': [200, 400, 600, 800, 1000],
+  },
+  'Test2': {
+    'History': [200, 400, 600, 800, 1000],
+    'Geography': [200, 400, 600, 800, 1000],
+  }
+};
+  
+function areArraysEqual(array1, array2) {
+    // First, check if the lengths are different. If so, they can't be equal.
+    if (array1.length !== array2.length) {
+        return false;
+    }
+    else{
+        return true
+    }
+}
+
+//broad achievment handler. Takes in the player ID, checks if conditions have been met.
+
+function achievementHandler(playerId){
+    const achievementPlayer = currentGameState.getPlayerById(playerId);
+    const unlockedAchievements = achievementPlayer.hatsUnlocked;
+    console.log('starting achievement check for player', achievementPlayer.name);
+    for(const achievement in achievmentList){
+
+        if(achievementPlayer.hatsUnlocked.includes(achievmentList[achievement].hat)){
+            console.log(`Achievement ${achievement} already unlocked for player ${achievementPlayer.name}`);
+        }
+        else{
+            if(achievmentList[achievement].condition({player: achievementPlayer})){
+                achievementPlayer.hatsUnlocked.push(achievmentList[achievement].hat);
+                achievementPlayer.updateHatsUnlocked(JSON.stringify(achievementPlayer.hatsUnlocked));
+                console.log(`Achievement ${achievement} unlocked for player ${achievementPlayer.name}`);
+            }
+            else{console.log('achievement not unlocked for player', achievementPlayer.name);}
+
+        }
+    }
+}
+
 
 server.listen(3000, () => {
     console.log('Server is running on port 3000');
@@ -283,16 +392,31 @@ class player {
         this.isConnected = true;
         this.isReady = false;
         this.isEliminated = false;
-        this.hatsUnlocked = ["hat1"];
+        this.hatsUnlocked = [];
 };
 
  modifyScore(amount) {
     this.score += amount;
+    console.log(`Player ${this.name} score modified by ${amount} to ${this.score}`);
+    achievementHandler(this.id);
+       
+    
     return this.score;
+}
 
+
+
+
+
+async updateHatsUnlocked(hats){
+    const query = 'UPDATE players SET Achievements_Unlocked = ? WHERE Name = ?';
+    const [result] = await pool.query(query, [hats, this.name]);
+    return result;
 }
 
 };
+
+
 
 
 
@@ -331,6 +455,11 @@ function startWebcamStream(player){
     // start and rebroadcast webcam stream
 }
 
+async function getPlayerData(playerName){
+    
+    const [playerData] = await pool.query('SELECT * FROM players WHERE Name = ?', [playerName]);
+    return playerData;
+}
 
 io.on('connection', (socket) => {
     let playerName = socket.handshake.query.name;
@@ -339,7 +468,7 @@ io.on('connection', (socket) => {
     let playerWebcam = socket.handshake.query.webcam || null;
     
     // Listen for player data from client
-    socket.on('playerData', (data) => {
+    socket.on('playerData', async(data) => {
         playerName = data.name;
         playerid = socket.id;
         playerImage = data.image || null;
@@ -352,14 +481,11 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // 1) Reconnect existing player by name if previously disconnected
         const reconnectedPlayer = currentGameState.reconnectPlayer(playerName, playerid);
 
         if (reconnectedPlayer) {
-            // Don't overwrite the player's original image during reconnection
-            // The playerImage from client might be wrong due to localStorage sharing
             console.log(`Player ${reconnectedPlayer.name} reconnected with new ID: ${playerid}`);
-            
-            // If the reconnected player doesn't have an image, use the one from client
             if (!reconnectedPlayer.playerImage && playerImage) {
                 reconnectedPlayer.playerImage = playerImage;
                 console.log(`Assigned image to reconnected player ${reconnectedPlayer.name}`);
@@ -371,7 +497,6 @@ io.on('connection', (socket) => {
                 const nameConflict = currentGameState.players.find(p => p.name === playerName && p.isConnected && p.id !== playerid);
                 if (nameConflict) {
                     console.log(`Name conflict: Player ${playerName} is already connected. Assigning unique name.`);
-                    // Assign a unique name by appending a number
                     let uniqueName = playerName;
                     let counter = 1;
                     while (currentGameState.players.find(p => p.name === uniqueName && p.isConnected)) {
@@ -381,34 +506,63 @@ io.on('connection', (socket) => {
                     playerName = uniqueName;
                     console.log(`Assigned unique name: ${playerName}`);
                 }
-                
+
                 const newPlayerObject = new player(playerName, playerid, playerImage, playerWebcam);
                 currentGameState.addPlayer(newPlayerObject);
                 console.log(`Player ${playerName} joined with ID: ${playerid}`);
-
-                //take the user's name, check the database for the user's past scores and acheivements, update the player object with the new data
-
-
-
-
-
-                
             } else {
                 // Update existing player's data (name, image, etc.)
                 if (playerName !== existingPlayer.name) {
-                    // Check for name conflicts before updating
                     const nameConflict = currentGameState.players.find(p => p.name === playerName && p.isConnected && p.id !== playerid);
                     if (nameConflict) {
                         console.log(`Name conflict: Cannot update player name to "${playerName}" - already taken by another connected player`);
-                        return; // Don't update the name if it conflicts
+                    } else {
+                        console.log(`Updating player name from "${existingPlayer.name}" to "${playerName}"`);
+                        existingPlayer.name = playerName;
                     }
-                    console.log(`Updating player name from "${existingPlayer.name}" to "${playerName}"`);
-                    existingPlayer.name = playerName;
                 }
                 if (playerImage && playerImage !== existingPlayer.playerImage) {
                     console.log(`Updating player image for ${existingPlayer.name}`);
                     existingPlayer.playerImage = playerImage;
                 }
+            }
+        }
+
+        // 2) After player object is ensured, optionally look up DB data on every update of non-anonymous name
+        if (playerName !== 'Anonymous Player' && playerName !== 'ADMIN') {
+            try {
+                const rows = await getPlayerData(playerName);
+                const currentPlayer = currentGameState.getPlayerById(playerid);
+
+                if (currentPlayer && Array.isArray(rows) && rows.length > 0) {
+                    const dbPlayer = rows[0];
+                    let unlocked = [];
+                    try {
+                        if (typeof dbPlayer.Achievements_Unlocked === 'string') {
+                            unlocked = JSON.parse(dbPlayer.Achievements_Unlocked || '[]');
+                        } else if (Array.isArray(dbPlayer.Achievements_Unlocked)) {
+                            unlocked = dbPlayer.Achievements_Unlocked;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse Achievements_Unlocked JSON; defaulting to empty array');
+                        unlocked = [];
+                    }
+                    currentPlayer.hatsUnlocked = unlocked;
+                    // Optionally sync canonical name from DB if different and no conflict
+                    if (dbPlayer.Name && dbPlayer.Name !== currentPlayer.name) {
+                        const conflict = currentGameState.players.find(p => p.name === dbPlayer.Name && p.isConnected && p.id !== currentPlayer.id);
+                        if (!conflict) {
+                            console.log(`Syncing player name to DB canonical value: ${dbPlayer.Name}`);
+                            currentPlayer.name = dbPlayer.Name;
+                        }
+                    }
+                    console.log('Player data loaded from DB; hatsUnlocked:', currentPlayer.hatsUnlocked);
+                } else {
+                    // Not found in DB - this is fine for new players
+                    // console.log('No DB record for player', playerName);
+                }
+            } catch (error) {
+                console.error('Error getting player data:', error);
             }
         }
 
@@ -467,6 +621,10 @@ io.on('connection', (socket) => {
     socket.on('submitWager', (data) => {
         currentGameState.wagerAmount = data.wager;
         console.log(`Wager of ${data.wager} submitted for Daily Double`);
+
+        
+        //if the player wagers their entire score, unlock achievement hat 4
+        achievementHandler(currentGameState.dailyDoublePlayer);
     });
 
     socket.on('revealQuestion', () => {
