@@ -13,6 +13,9 @@ fi
 
 sudo cp -r ./build/* /var/www/html
 
+sudo systemctl restart apache2
+
+
 if [ $? == 0 ]; 
 
 then

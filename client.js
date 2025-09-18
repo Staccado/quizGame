@@ -25,7 +25,7 @@ socket.on('connect', () => {
     // Send player data after connection
     socket.emit('playerData', {
         name: playerName,
-        image: playerImage,
+       // image: playerImage,
         id: 23,
         webcam: false
     });

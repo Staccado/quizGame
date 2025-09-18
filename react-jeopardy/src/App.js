@@ -134,7 +134,7 @@ const HomePage = () => {
             const playerImage = localStorage.getItem('playerImage');
             const playerData = {
                 name: playerName.trim() || 'Anonymous Player',
-                image: playerImage || "react.png",
+               // image: playerImage || "react.png",
                 webcam: false
             };
 
@@ -157,7 +157,7 @@ const HomePage = () => {
             const playerImage = localStorage.getItem('playerImage');
             const playerData = {
                 name: playerName.trim() || 'Anonymous Player',
-                image: playerImage || "react.png",
+               // image: playerImage || "react.png",
                 webcam: false
             };
 
@@ -264,7 +264,7 @@ const HomePage = () => {
                     if (socket.connected) {
                         const playerData = {
                             name: playerName.trim() || 'Anonymous Player',
-                            image: base64data,
+                            //image: base64data,
                             webcam: false
                         };
                         console.log('Re-registering player with updated image:', playerData);

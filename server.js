@@ -257,6 +257,7 @@ function areArraysEqual(array1, array2) {
 //broad achievment handler. Takes in the player ID, checks if conditions have been met.
 
 function achievementHandler(playerId){
+    const socket = io;
     const achievementPlayer = currentGameState.getPlayerById(playerId);
     const unlockedAchievements = achievementPlayer.hatsUnlocked;
     console.log('starting achievement check for player', achievementPlayer.name);
@@ -270,6 +271,8 @@ function achievementHandler(playerId){
                 achievementPlayer.hatsUnlocked.push(achievmentList[achievement].hat);
                 achievementPlayer.updateHatsUnlocked(JSON.stringify(achievementPlayer.hatsUnlocked));
                 console.log(`Achievement ${achievement} unlocked for player ${achievementPlayer.name}`);
+                let testMessage = "this is a placeholder ~ hat 3 should be unlocked now :3"
+                socket.to(achievementPlayer.id).emit('achievementUnlocked', testMessage);
             }
             else{console.log('achievement not unlocked for player', achievementPlayer.name);}
 
@@ -315,6 +318,7 @@ class gameState {
         }
         this.pictionaryImage = null;
         this.winner = null;
+       
      
 
     }
@@ -392,7 +396,8 @@ class player {
         this.isConnected = true;
         this.isReady = false;
         this.isEliminated = false;
-        this.hatsUnlocked = [];
+        this.hatsUnlocked = ["hat1","hat2","hat4","hat5","hat6"];
+        this.playerHatPosition = {};
 };
 
  modifyScore(amount) {
@@ -1101,6 +1106,21 @@ io.on('connection', (socket) => {
         console.log('winner', winner)
         currentGameState.winner = winner;
     });
+
+    socket.on('hatUpdate', (data) => {
+        const player = currentGameState.getPlayerById(data.playerId);
+        if (player) {
+            //apply the hat data to the player ID - this is the data structure
+           // playerId,
+           // hatName,
+           // position: { x: relativeXPercent, y: relativeYPercent },
+          //  size: { width: relativeWidthPercent, height: relativeHeightPercent }
+
+          player.playerHatPosition = data;
+        }
+    });
+
+
 
 
 

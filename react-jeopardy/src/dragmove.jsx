@@ -12,6 +12,7 @@ export default function DragMove(props) {
   } = props;
 
   const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
   // Use a ref to hold a reference to the DOM element
   const dragRef = useRef(null);
 
@@ -26,6 +27,7 @@ export default function DragMove(props) {
     e.preventDefault(); 
     
     setIsDragging(true);
+    setHasDragged(false); // Reset drag tracking
 
     // Capture the pointer
     // This tells the browser to send all future pointer events to this element
@@ -34,7 +36,11 @@ export default function DragMove(props) {
 
   const handlePointerUp = (e) => {
     setIsDragging(false);
-    onPointerUp(e);
+    
+    // Only call onPointerUp if we actually dragged
+    if (hasDragged) {
+      onPointerUp(e);
+    }
 
     // Release the pointer capture
     dragRef.current.releasePointerCapture(e.pointerId);
@@ -43,6 +49,7 @@ export default function DragMove(props) {
   const handlePointerMove = (e) => {
     // We only call onDragMove if dragging is active
     if (isDragging) {
+      setHasDragged(true); // Mark that we've actually dragged
       onDragMove(e);
     }
   };
