@@ -42,7 +42,7 @@ export function QuestionDisplay({ questionText, questionImage, drawingBoard, las
             return (
                 <div className="question-content">
                     <div className="question-text">
-                        {questionText}
+                        
                     </div>
                     {pictionaryImageUrl ? (
                         <img src={pictionaryImageUrl} alt="Pictionary Drawing" className="question-image" />

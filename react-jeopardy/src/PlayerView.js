@@ -27,11 +27,63 @@ const PlayerView = () => {
     x: 0,
     y: 0
   });
+  
+  const [hatSize, setHatSize] = useState({
+    width: 100,
+    height: 100
+  });
+  
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
   const handleDragMove = (e) => {
+    // Don't drag if we're resizing
+    if (isResizing) return;
+    
     setTranslate({
       x: translate.x + e.movementX,
       y: translate.y + e.movementY
     });
+  };
+
+  const handlePointerDown = (e) => {
+    // Don't start dragging if clicking on resize handle
+    if (e.target.classList.contains('resize-handle')) {
+      e.stopPropagation();
+      return false;
+    }
+    return true;
+  };
+
+  const handleResizeStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: hatSize.width,
+      height: hatSize.height
+    });
+  };
+
+  const handleResizeMove = (e) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+    
+    // Simple corner resize (maintains aspect ratio)
+    const scale = Math.max(0.5, Math.min(3, 1 + (deltaX + deltaY) / 200));
+    
+    setHatSize({
+      width: Math.max(50, Math.min(300, resizeStart.width * scale)),
+      height: Math.max(50, Math.min(300, resizeStart.height * scale))
+    });
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
   };
   
 
@@ -68,6 +120,31 @@ const PlayerView = () => {
         socket.off('gameTick');
     };
   }, [socket]);
+
+  // Add resize event listeners
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (isResizing) {
+        handleResizeMove(e);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isResizing) {
+        handleResizeEnd();
+      }
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isResizing, resizeStart, hatSize]);
 
   useEffect(() => {
     socket.on('buzzerWinner', (buzzerWinner) => {
@@ -108,6 +185,8 @@ const PlayerView = () => {
       </div>
     );
   }
+
+
   if (gameState.finalJeopardyActive) {
     return (
       <div className="App">
@@ -115,36 +194,103 @@ const PlayerView = () => {
       </div>
     );
   } else {
+
+
+    if (!gameState.winner) {
     return (
       <div className="App">
         <div>
         
+       
 
           <DragMove 
             onDragMove={handleDragMove}
-            onPointerDown={() => {}}
+            onPointerDown={handlePointerDown}
             onPointerUp={() => {}}
             onPointerMove={() => {}}
           >
-            <div style={{ transform: `translate(${translate.x}px, ${translate.y}px)` , position: 'fixed', zIndex: 9999, pointerEvents: 'auto' }}>
-              <img src={hat} alt="hat" />
-
+            <div style={{ 
+              transform: `translate(${translate.x}px, ${translate.y}px)`, 
+              position: 'fixed', 
+              zIndex: 9999, 
+              pointerEvents: 'auto',
+              display: 'inline-block'
+            }}>
+              <div 
+                style={{ 
+                  position: 'relative', 
+                  display: 'inline-block',
+                  ':hover .resize-handle': {
+                    opacity: 1
+                  }
+                }}
+                className="hat-container"
+              >
+                <img 
+                  src={hat} 
+                  alt="hat" 
+                  draggable={false}
+                  style={{
+                    width: `${hatSize.width}px`,
+                    height: `${hatSize.height}px`,
+                    display: 'block'
+                  }}
+                />
+                {/* Resize handle */}
+                <div
+                  className="resize-handle"
+                  style={{
+                    position: 'absolute',
+                    bottom: '-8px',
+                    right: '-8px',
+                    width: '16px',
+                    height: '16px',
+                    backgroundColor: '#007bff',
+                    border: '2px solid white',
+                    borderRadius: '50%',
+                    cursor: 'nw-resize',
+                    pointerEvents: 'auto',
+                    opacity: 0,
+                    transition: 'opacity 0.2s ease',
+                    zIndex: 10000
+                  }}
+                  onMouseDown={handleResizeStart}
+                />
+              </div>
             </div>
+            </DragMove>
 
-          
+        
         
         <div className="board-area-container">
           <Profiler id="BoardProfiler" onRender={profilerCallback}>
             <Board boardData={gameState.board} isAdmin={false} />
           </Profiler>
           <QuestionScreen gameState={gameState} />
+
         </div>
         <PodiumContainer />
         <Buzzer gameState={gameState} />
-        </DragMove>
+        
         </div>
       </div>
     );
+  } else {
+    return (
+      <div className="App">
+        <div className="winner-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+        <h1>Winner {gameState.winner.name}</h1>
+        <JeopardyPodium
+                    name={gameState.winner.name}
+                    score={gameState.winner.score}
+                    playerImage={gameState.winner.playerImage}
+                    hasWebcam={gameState.winner.webcamStream}
+                    className="daily-double-podium2"
+                />
+      </div>
+      </div>
+    );
+  }
   }
 };
 

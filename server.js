@@ -21,11 +21,13 @@ app.use('/audio', (req, res, next) => {
   }, express.static(path.join(__dirname, 'audio')));
 
 app.use(cors({
-	origin: "https://test2.chrismartel.com"
+	origin: ["https://test2.chrismartel.com",
+	"https://quiz.chrismartel.com"
+	]
 }));
 
 
-const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://test3.chrismartel.com') : (process.env.SERVER_URL || 'https://test2.chrismartel.com');
+const baseUrl = process.env.NODE_ENV === 'production' ? (process.env.PRODUCTION_URL || 'https://test3.chrismartel.com') : (process.env.SERVER_URL || 'https://quiz.chrismartel.com');
 let buzzerArray = [];
 let previousBuzzerArray = [];
 
@@ -161,7 +163,7 @@ testBoardLayout = [
 // Configure CORS for Socket.IO
 const io = socketio(server, {
     cors: {
-	    origin: "https://test2.chrismartel.com", // In production, replace with your actual domain
+	    origin: ["https://test2.chrismartel.com","https://quiz.chrismartel.com"], // In production, replace with your actual domain
         methods: ["GET", "POST"]
     }
 });
@@ -203,6 +205,8 @@ class gameState {
 
         }
         this.pictionaryImage = null;
+        this.winner = null;
+     
 
     }
 
@@ -279,6 +283,7 @@ class player {
         this.isConnected = true;
         this.isReady = false;
         this.isEliminated = false;
+        this.hatsUnlocked = ["hat1", "hat2", "hat3", "hat4", "hat5", "hat6", "hat7", "hat8", "hat9", "hat10"];
 };
 
  modifyScore(amount) {
@@ -380,6 +385,14 @@ io.on('connection', (socket) => {
                 const newPlayerObject = new player(playerName, playerid, playerImage, playerWebcam);
                 currentGameState.addPlayer(newPlayerObject);
                 console.log(`Player ${playerName} joined with ID: ${playerid}`);
+
+                //take the user's name, check the database for the user's past scores and acheivements, update the player object with the new data
+
+
+
+
+
+                
             } else {
                 // Update existing player's data (name, image, etc.)
                 if (playerName !== existingPlayer.name) {
@@ -920,7 +933,24 @@ io.on('connection', (socket) => {
         
 
         console.log('Final Jeopardy has ended.');
+
+        //rank players by score
+        let rankedPlayers = currentGameState.players.sort((a, b) => b.score - a.score);
+        console.log('ranked players', rankedPlayers)
+        currentGameState.rankedPlayers = rankedPlayers;
+
+        let winner = rankedPlayers[0];
+        console.log('winner', winner)
+        currentGameState.winner = winner;
     });
+
+
+
+
+
+
+
+
     socket.on('printData', () =>{
         console.log(currentGameState)
     });
@@ -992,7 +1022,9 @@ setInterval(() => {
         finalJeopardyAnswers: currentGameState.finalJeopardyAnswers,
         drawingBoard: currentGameState.drawingBoard,
         pictionaryImageUrl: currentGameState.pictionaryImageUrl,
-        pictionarySubmittedBy: currentGameState.pictionarySubmittedBy
+        pictionarySubmittedBy: currentGameState.pictionarySubmittedBy,
+        winner: currentGameState.winner,
+      
 
     };
    // console.log(cleanGameState);

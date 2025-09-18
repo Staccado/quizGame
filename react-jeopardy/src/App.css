@@ -202,3 +202,13 @@ body {
   align-items: center;
   transform: scale(2.0);
 }
+
+/* Hat resize handle styles */
+.hat-container:hover .resize-handle {
+  opacity: 1 !important;
+}
+
+.resize-handle:hover {
+  opacity: 1 !important;
+  transform: scale(1.1);
+}

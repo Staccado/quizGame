@@ -80,7 +80,7 @@ function QuestionScreen({ gameState }) {
     // }
 
     return (
-        <div className={`question-screen ${dailyDouble ? 'daily-double' : 'regular-question'} ${questionActive ? 'active' : ''}`}>
+        <div className={`question-screen ${dailyDouble ? 'daily-double' : 'regular-question'} ${questionActive ? 'active' : ''} ${drawingBoard ? 'drawing-board' : ''}`}>
             {contentToRender}
 
             {dailyDouble && dailyDoublePlayer && (
